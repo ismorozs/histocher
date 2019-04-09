@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>History Searcher</title>
+  <link rel="stylesheet" type="text/css" href="main.css">
+  <link rel="icon" type="image/png" href="/icons/hs16.png">
+</head>
+<body>
+  <div class="wrapper">
+    <div class="summary hidden">
+      Query: <a href="#" class="query"></a>
+      <input type="text" class="fullQuery hidden">
+      <br>
+      Found <span class="totalCount"></span> entries.
+      Page
+      <button class="moveBack"></button>
+      <span class="pageNum page-number"></span>
+      <button class="moveForward"></button>
+      /
+      <span class="totalPages page-number"></span>
+      <button class="jumpToPage" >Go to page</button>
+      <button class="settings">Settings</button>
+    </div>
+
+    <div class="table-container"></div>
+
+    <div class="spinner">
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+    </div>
+  </div>
+  <script type="text/javascript" src="main.js"></script>
+</body>
+</html>

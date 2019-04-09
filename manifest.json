@@ -1,0 +1,38 @@
+{
+
+  "manifest_version": 2,
+  "name": "Histocher",
+  "version": "1.0.1",
+
+  "description": "Simple and compact extension helping to search through history",
+  "homepage_url": "https://github.com/ismorozs/histocher",
+  "icons": {
+    "16": "icons/hs16.png",
+    "19": "icons/hs19.png",
+    "32": "icons/hs32.png",
+    "48": "icons/hs48.png",
+    "64": "icons/hs64.png",
+    "128": "icons/hs128.png"
+  },
+
+  "permissions": [
+    "history",
+    "storage",
+    "unlimitedStorage",
+    "tabs"
+  ],
+
+  "background": {
+    "scripts": ["background-script.js"]
+  },
+
+  "omnibox": {
+    "keyword": "h"
+  },
+
+  "options_ui": {
+    "page": "options/options.html"
+  },
+
+  "author": "Igor Morozov"
+}
