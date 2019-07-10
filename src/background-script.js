@@ -1,6 +1,10 @@
+const browser = require('webextension-polyfill');
+
+import { DEFAULT_SETTINGS } from './values';
+
 const EXTENSION_PREFIX = 'h';
 const SPACE_REGEXP = /\s+/g;
-const DEFAULT_START = new Date(0, 0, 0, 0, 0, 0);
+const DEFAULT_START = new Date(0);
 const DEFAULT_END = new Date(9999, 11, 31);
 const RESULTS_SAVE_KEY = 'results';
 const FAVICON_SAVE_KEY = 'favicon';
@@ -40,19 +44,6 @@ const STRING_FILTERS = {
   '-title': (obj, str) => !has(obj.title.toLowerCase(), str),
 };
 
-const COLOR_SCHEMES = {
-  grey: '210, 210, 210',
-  green: '169, 255, 148',
-  blue: '162, 210, 254',
-  orange: '254, 208, 162',
-  pink: '255, 208, 247',
-};
-
-const DEFAULT_SETTINGS = {
-  PAGE_SIZE: 300,
-  COLOR: 'grey',
-};
-
 const STATE = {};
 
 const actions = {
@@ -64,7 +55,7 @@ browser.omnibox.onInputEntered.addListener(findAndRender);
 browser.runtime.onMessage.addListener(onMessage);
 browser.storage.onChanged.addListener(onStorageChange);
 browser.tabs.onRemoved.addListener(cleanStorage);
-browser.tabs.onUpdated.addListener(onFaviconUpdated, { properties: ['favIconUrl'] });
+browser.tabs.onUpdated.addListener(onFaviconUpdated);
 
 loadSettings();
 
@@ -97,13 +88,13 @@ function onFaviconUpdated (tabId, changedInfo, tab) {
 }
 
 function onMessage (message) {
-  if (message.action && message.senderId === browser.runtime.id) {
+  if (message.action) {
     actions[message.action](message);
   }
 }
 
 function sendMessageToTab (tabId, action, payload) {
-  const message = Object.assign({ action, senderId: browser.runtime.id, background: true }, payload);
+  const message = Object.assign({ action, background: true }, payload);
   return browser.tabs.sendMessage(tabId, message);
 }
 
@@ -119,23 +110,18 @@ function findAndRender (rawString) {
   const searchTerms = options.base.join(' ');
 
   createExtensionTab()
-    .then((tab) => addColorScheme(tab.id)
-      .then(() => searchHistory(searchTerms, options.timeFrames))
-      .then((results) => handleResults(results, options))
-      .then((results) => saveResults(tab.id, results, 0))
-      .then((results) => saveTabState(tab.id, results, options))
-      .then((tabState) => setupClientPage(tabState))
-      .then(() => showResults(options))
-    );
+    .then((tab) => {
+      searchHistory(searchTerms, options.timeFrames)
+        .then((results) => handleResults(results, options))
+        .then((results) => saveResults(tab.id, results, 0))
+        .then((results) => saveTabState(tab.id, results, options))
+        .then((tabState) => setupClientPage(tabState)
+          .then(() => showResults(options)));
+    });
 }
 
 function createExtensionTab () {
   return browser.tabs.create({ active: true, url: CONTENT_PAGE_URL });
-}
-
-function addColorScheme (tabId) {
-  const styleStr = generateStyleString(COLOR_SCHEMES[STATE.COLOR]);
-  return browser.tabs.insertCSS(tabId, { code: styleStr });
 }
 
 function prepareOptions (rawString) {
@@ -152,7 +138,7 @@ function prepareOptions (rawString) {
 }
 
 function searchHistory (searchTerms, timeFrames) {
-  const historyRequests = timeFrames.map((timeFrame) => makeHistoryRequest(searchTerms, timeFrame.start, timeFrame.end));
+  const historyRequests = timeFrames.map((timeFrame) => makeHistoryRequest(searchTerms, timeFrame.start.getTime(), timeFrame.end.getTime()));
 
   return Promise.all(historyRequests).then(flattenArray);
 }
@@ -295,7 +281,7 @@ function flattenTimes (options) {
 }
 
 function makeHistoryRequest (text, startTime, endTime) {
-  return browser.history.search({ text, startTime, endTime, maxResults: Number.MAX_SAFE_INTEGER });
+  return browser.history.search({ text, startTime, endTime, maxResults: 2147483647 });
 }
 
 function flattenArray (arr) {
@@ -388,6 +374,7 @@ function saveTabState (tabId, results, options) {
     totalCount: results.length,
     totalPages: Math.ceil(results.length / STATE.PAGE_SIZE),
     tabId,
+    color: STATE.COLOR,
   });
 }
 

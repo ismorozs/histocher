@@ -1,3 +1,5 @@
+const browser = require('webextension-polyfill');
+
 const WRAPPER_PADDING = 55;
 const MAX_WRAPPER_WIDTH = 1366;
 const VISIT_COUNTS_WIDTH = 45;
@@ -41,7 +43,7 @@ let CURRENT_PAGE;
 browser.runtime.onMessage.addListener(onMessage);
 
 function onMessage (message) {
-  if (!message.background || message.senderId !== browser.runtime.id) {
+  if (!message.background) {
     return;
   }
 
@@ -64,6 +66,8 @@ function setupClientPage (data) {
   }
 
   document.title = data.query;
+
+  generateColorScheme(data.color);
 }
 
 function buildPage (message) {
@@ -92,7 +96,7 @@ function createTable (list) {
 function createRow (values) {
   const row = document.createElement('tr');
   
-  for (cellName in ROW_OPTS) {
+  for (let cellName in ROW_OPTS) {
     const cell = createCell(cellName, values);
     cell.classList.add(cellName);
     row.appendChild(cell);
@@ -225,13 +229,33 @@ function generateStyles () {
     .lastVisitTime { width: ${LAST_VISIT_TIME_WIDTH}px; }
   `;
 
-  browser.tabs.getCurrent().then((tab) => browser.tabs.insertCSS(tab.id, { code: stylesStr }));
+  appendStyles(stylesStr);
+}
+
+function generateColorScheme (color) {
+  const lightBackground = `background-color: rgba(${color}, 0.2);`;
+  const darkBackground = `background-color: rgba(${color}, 0.7);`;
+
+  const colorScheme = `
+    tr:nth-child(odd) { ${lightBackground} }
+    tr:hover { ${darkBackground} }
+    .query:hover { ${lightBackground} }
+    .query:active { ${darkBackground} }
+  `;
+
+  appendStyles(colorScheme);
+}
+
+function appendStyles (styleStr) {
+  const styleEl = document.createElement('style');
+  styleEl.appendChild( document.createTextNode(styleStr) );
+  document.head.appendChild(styleEl);
 }
 
 function movePage (inc) {
   browser.tabs.getCurrent()
     .then((tab) =>
-      browser.runtime.sendMessage({ action: 'movePage', senderId: browser.runtime.id, inc, tabId: tab.id }));
+      browser.runtime.sendMessage({ action: 'movePage', inc, tabId: tab.id }));
 }
 
 function jumpToPage (defaultPage) {
@@ -243,7 +267,7 @@ function jumpToPage (defaultPage) {
 
   browser.tabs.getCurrent()
     .then((tab) =>
-      browser.runtime.sendMessage({ action: 'jumpToPage', senderId: browser.runtime.id, pageNum: +userInput, tabId: tab.id }));
+      browser.runtime.sendMessage({ action: 'jumpToPage', pageNum: +userInput, tabId: tab.id }));
 }
 
 function openSettings () {

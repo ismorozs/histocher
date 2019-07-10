@@ -1,0 +1,22 @@
+{
+  "name": "history-searcher",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "webpack"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ismorozs/histocher.git"
+  },
+  "author": "Igor Morozov <ismorozs@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ismorozs/histocher/issues"
+  },
+  "homepage": "https://github.com/ismorozs/histocher#readme",
+  "devDependencies": {
+    "webextension-polyfill": "0.4.0",
+    "webpack": "4.35.3",
+    "webpack-cli": "3.3.5"
+  }
+}

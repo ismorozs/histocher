@@ -94,6 +94,9 @@ th span {
   height: 25px;
   position: relative;
   top: -7px;
+  font: 400 18px sans-serif;
+  line-height: 1.6;
+  padding: 8px 0;
 }
 
 .moveBack::before, .moveBack::after, .moveForward::before, .moveForward::after {
@@ -103,8 +106,8 @@ th span {
   background: black;
   width: 12px;
   height: 3px;
-  top: 8px;
-  left: 3px;
+  top: calc(50% - 1px);
+  left: calc(50% - 7px);
 }
 
 .moveForward::before, .moveForward::after {
