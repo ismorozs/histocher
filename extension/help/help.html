@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <link rel="stylesheet" href="styles.css"/>
+    <link rel="icon" type="image/png" href="/icons/hs16.png">
+    <title>Help</title>
+  </head>
+  <body>
+    <section>
+      <h1>Help</h1>
+      <ul>
+        <li><a href="#terms">Search terms</a></li>
+        <li><a href="#tags">Tags</a></li>
+        <li><a href="#dates">Dates</a></li>
+        <li><a href="#afterFilters">After filters</a></li>
+        <li><a href="#sorting">Sorting</a></li>
+        <li><a href="#examples">Examples</a></li>
+      </ul>
+      
+      <p>
+        This extension searches and returns pages based on the query entered in the browser's address bar.<br>
+        For the extension to recognize a query, it must start with the <span class="red bold">'h '</span> string (an 'h' letter followed by a whitespace)
+      </p>
+
+      <p class="emphasizeRect green">
+        General query form:
+        <br>
+        <code><span class="red bold">h</span> searchTerms... tags... dates... afterFilters... sortingRules...</code>
+      </p>
+
+      <br>
+      where:
+      <br>
+
+      <table class="emphasizeRect green">
+        <tr><th>Arguments</th><th>Meaning</th></tr>
+        <tr><td><code>searchTerms</code></td><td>Strings which must exist within a page's title or URL</td></tr>
+        <tr><td><code>tags</code></td><td>User-defined and assigned to pages tags</td></tr>
+        <tr><td><code>dates</code></td><td>Date arguments of special format specifying search timeframes</td></tr>
+        <tr><td><code>afterFilters</code></td><td>Filters removing unwanted entries from the resulting set</td></tr>
+        <tr><td><code>sortRules</code></td><td>Sorting rules to be applied on the resulting set</td></tr>
+      </table>
+
+      <p>Any number of arguments of any type can be included in a query, or none at all. The only important thing is their order if they are present.</p>
+      <hr>
+    </section>
+
+    <section>
+      <h3 id="terms">Search terms</h3>
+      <p>String, words, letters that must exist within a page's title or URL</p>
+
+      <table class="emphasizeRect orange">
+        <tr><th>Example query</th><th>Explanation</th></tr>
+        <tr><td>h word</td><td>Find any pages containing 'word' in either URL or title</td></tr>
+        <tr><td>h word1 word2</td><td>Find any pages containing 'word1' AND 'word2' in either URL or title</td></tr>
+      </table>
+
+      <hr>
+    </section>
+
+    <section>
+      <h3 id="tags">Tags</h3>
+      <p>
+        Tags are special entities assignable by the user to pages for easiness of later finding those pages.<br>
+        After a tag is assigned to a page through the extensions' popup, pages with such a tag can be found using a tag argument in a query. <br>
+        Tagged pages will be found through a tag even if they are deleted from history.
+      </p>
+      <p class="emphasizeRect green">
+        Tag argument form:
+        <br>
+        <code><span class="purple bold">!tagName</span></code><br>
+      </p>
+      <p>Tag word must be prefixed with the exclamation mark (!)</p>
+
+      <table class="emphasizeRect orange">
+        <tr><th>Example query</th><th>Explanation</th></tr>
+        <tr><td>h !tagWord</td><td>Find any pages having 'tagWord' assigned to them</td></tr>
+        <tr><td>h !tag1 !tag2</td><td>Find any pages having 'tag1' AND 'tag2' tags assigned to them</td></tr>
+      </table>
+      <hr>
+    </section>
+
+    <section>
+      <h3 id="dates">Dates</h3>
+      <p>Dates limit resulting set to desired time borders.</p>
+
+      <p class="emphasizeRect green">
+        General date argument form:
+        <br>
+        <code class="blue bold">[+-=]dd/mm/yyyy/hh:mm</code>
+      </p>
+      <p>
+        where one of <span class="blue">-</span>, <span class="blue">+</span>, <span class="blue">=</span> signs must be included at the start of the date argument depending on the desired result:
+      </p>
+  
+      <table class="emphasizeRect green">
+        <tr><th class="alignCenter">Sign</th><th>Explanation</th></tr>
+        <tr>
+          <td class="alignCenter"><code>+</code></td><td>after and including date</td>
+        </tr>
+        <tr>
+          <td class="alignCenter"><code>-</code></td><td>before and including date</td>
+        </tr>
+        <tr>
+          <td class="alignCenter"><code>=</code></td><td>exact date</td>
+        </tr>
+      </table>
+  
+      <p>
+        then the sign is followed by one or more date segments specifying the necessary precision of a time frame:
+      </p>
+  
+      <table class="emphasizeRect green">
+        <tr><th>Segment</th><th>Description</th><th>Explanation</th></tr>
+        <tr><td class="alignCenter"><code>dd/</code></td><td>one or two digits followed by a slash</td><td>a number of the month</td></tr>
+        <tr><td class="alignCenter"><code>/mm/</code></td><td>a slash followed by one or two digits followed by another slash</td><td>a number of the month</td></tr>
+        <tr><td class="alignCenter"><code>/yyyy/</code></td><td>a slash followed by four digits followed by another slash</td><td>a year</td></tr>
+        <tr><td class="alignCenter"><code>hh:</code></td><td>two digits followed by a colon</td><td>hours</td></tr>
+        <tr><td class="alignCenter"><code>:mm</code></td><td>a colon followed by two digits</td><td>minutes</td></tr>
+      </table>
+  
+      <p>
+        Omitted date segments will be assumed to be of the current time (the current year, the current month, etc.). <br>
+        Multiple date options can be added and combined to specify multiple time spans.
+      </p>
+  
+      <table class="emphasizeRect orange">
+          <tr><th>Example query</th><th>Explanation</th></tr>
+          <tr><td>h =/2018/</td><td>Find pages that were visited in 2018</td></tr>
+          <tr><td>h =/4/2018/</td><td>Find pages that were visited in April 2018</td></tr>
+          <tr><td>h +3/</td><td>Find pages that were visited from 3th of the current month up to now</td></tr>
+          <tr><td>h +3/ -10/</td><td>Find pages that were visited from 3th and before 10th of the current month</td></tr>
+          <tr><td>h +/6/</td><td>Find pages that were visited from June of the current year up to now</td></tr>
+          <tr><td>h =/5/ =/9/</td><td>Find pages that were visited in May or September of the current year</td></tr>
+          <tr><td>h +6: -12:</td><td>Find pages that were visited today from 6 am to 12 pm</td></tr>
+        </table>
+      <hr>
+    </section>
+
+    <section>
+        <h3 id="afterFilters">After filters</h3>
+        <p>Filters that will remove unwanted entries from the resulting set</p> 
+        
+        <table class="emphasizeRect green">
+          <tr><th>Form</th><th>Explanation</th></tr>
+          <tr><td><code>+url terms...</code></td><td>include only pages with a URL that contain such terms</td></tr>
+          <tr><td><code>-url terms...</code></td><td>exclude pages that contain a URL with such terms</td></tr>
+          <tr><td><code>+title terms...</code></td><td>include only pages with a title that contain such terms</td></tr>
+          <tr><td><code>-title terms...</code></td><td>exclude pages that contain a title with such terms</td></tr>
+        </table>
+        <br>
+        <table class="emphasizeRect orange">
+          <tr><th>Example query</th><th>Explanation</th></tr>
+          <tr><td>h word -title word</td><td>Find pages containing 'word' only in URL</td></tr>
+          <tr><td>h word1 +url word2 word3</td><td>Find pages containing 'word1' in either URL or title AND ALSO have 'word2' AND 'word3' in their URL</td></tr>
+        </table>
+    
+        <hr>
+    </section>
+
+    <section>
+        <h3 id="sorting">Sorting</h3>
+
+        <table class="emphasizeRect green">
+          <tr><th>Form</th><th>Explanation</th></tr>
+          <tr>
+            <td><code>&gt;u terms...</code><br><code>&gt;url terms...</code> </td><td>sort result by url in ascending order</td>
+          </tr>
+          <tr>
+            <td><code>&lt;u terms...</code><br><code>&lt;url terms...</code></td><td>sort result by url in descending order</td>
+          </tr>
+          
+          <tr>
+            <td><code>&gt;t terms...</code><br><code>&gt;title terms...</code></td><td>sort result by title in ascending order</td>
+          </tr>
+          <tr>
+            <td><code>&lt;t terms...</code><br><code>&lt;title terms...</code></td><td>sort result by title in descending order</td>
+          </tr>
+          
+          <tr>
+            <td><code>&gt;d terms...</code><br><code>&gt;date terms...</code></td><td>sort result by date in ascending order</td>
+          </tr>
+          <tr>
+            <td><code>&lt;d terms...</code><br><code>&lt;date terms...</code></td><td>sort result by date in descending order</td>
+          </tr>
+          
+          <tr>
+            <td><code>&gt;v terms...</code><br><code>&gt;visit terms...</code></td><td>sort result by visit count in ascending order</td>
+          </tr>
+          <tr>
+            <td><code>&lt;v terms...</code><br><code>&lt;visit terms...</code></td><td>sort result by visit count in descending order</td>
+          </tr>  
+        </table>
+    
+        <hr>
+    </section>
+    <section>
+      <h3 id="examples">Complex examples</h3>
+
+      <table class="emphasizeRect orange">
+        <tr><th>Example query</th><th>Explanation</th></tr>
+        <tr><td>h word !tag</td><td>Find pages containing 'word' in either URL or title and having 'tag' tag</td></tr>
+        <tr><td>h !tag1 !tag2 =/7/</td><td>Find pages having 'tag1' and 'tag2' tags visited in July</td></tr>
+        <tr><td>h word +title word &gt;url</td><td>Find pages containing 'word' in title and sort them by URL</td></tr>
+        <tr><td>h word1 word2 !tag1 !tag2 &gt;t</td><td>Find pages containing 'word1' and 'word2' in either URL or title, and having 'tag1' and 'tag2' tags, and then sort them by title</td></tr>
+        <tr><td>h word =1/ =8/ =15/</td><td>Find pages containing 'word'  in either URL or title that were visited on 1th, 8th or 15th of the current month</td></tr>
+      </table>
+    </section>
+  </body>
+</html>

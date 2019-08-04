@@ -1288,19 +1288,150 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _values__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./values */ "./src/values.js");
+/* harmony import */ var _common_interaction__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./common/interaction */ "./src/common/interaction.js");
+/* harmony import */ var _background_reactions__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./background/reactions */ "./src/background/reactions.js");
+/* harmony import */ var _background_messages__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./background/messages */ "./src/background/messages.js");
+/* harmony import */ var _background_state__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./background/state */ "./src/background/state.js");
 const browser = __webpack_require__(/*! webextension-polyfill */ "./node_modules/webextension-polyfill/dist/browser-polyfill.js");
 
 
+
+
+
+
+const FAVICON_SAVE_KEY = 'favicon';
+
+window.__IS_BACKGROUND_SCRIPT__ = true;
+
+browser.omnibox.onInputEntered.addListener((query) => _background_reactions__WEBPACK_IMPORTED_MODULE_1__["default"].startSearch({ query }));
+browser.runtime.onMessage.addListener((message) => Object(_common_interaction__WEBPACK_IMPORTED_MODULE_0__["onMessage"])(message, _background_reactions__WEBPACK_IMPORTED_MODULE_1__["default"]));
+browser.storage.onChanged.addListener(_background_state__WEBPACK_IMPORTED_MODULE_3__["default"].onSettingsChange);
+browser.tabs.onActivated.addListener(onTabActivated);
+browser.tabs.onRemoved.addListener(onTabRemoved);
+browser.tabs.onUpdated.addListener(onFaviconUpdated);
+
+_background_state__WEBPACK_IMPORTED_MODULE_3__["default"].loadSettings();
+
+function onFaviconUpdated (tabId, changedInfo, tab) {
+  const origin = tab.url.split('/').slice(0, 3).join('/')
+  browser.storage.local.set({ [origin + FAVICON_SAVE_KEY]: changedInfo.favIconUrl });
+}
+
+function onTabActivated ({ tabId }) {
+  if (_background_state__WEBPACK_IMPORTED_MODULE_3__["default"].getTabState(tabId)) {
+    _background_messages__WEBPACK_IMPORTED_MODULE_2__["default"].sendTagData({ tabId });
+  }
+}
+
+function onTabRemoved (tabId) {
+  if (_background_state__WEBPACK_IMPORTED_MODULE_3__["default"].getTabState(tabId)) {
+    _background_state__WEBPACK_IMPORTED_MODULE_3__["default"].removeTabState(tabId);
+  }
+}
+
+
+/***/ }),
+
+/***/ "./src/background/common.js":
+/*!**********************************!*\
+  !*** ./src/background/common.js ***!
+  \**********************************/
+/*! exports provided: has, STRING_FILTERS */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "has", function() { return has; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "STRING_FILTERS", function() { return STRING_FILTERS; });
+function has (str, substr) {
+  return str.indexOf(substr) >= 0;
+}
+
+const STRING_FILTERS = {
+  '+url': (obj, str) => has(obj.url.toLowerCase(), str),
+  '+title': (obj, str) => has(obj.title.toLowerCase(), str),
+  '+urlortitle': (obj, str) => has(obj.title.toLowerCase(), str) || has(obj.url.toLowerCase(), str),
+  '-url': (obj, str) => !has(obj.url.toLowerCase(), str),
+  '-title': (obj, str) => !has(obj.title.toLowerCase(), str),
+};
+
+
+
+/***/ }),
+
+/***/ "./src/background/messages.js":
+/*!************************************!*\
+  !*** ./src/background/messages.js ***!
+  \************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _common_interaction__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../common/interaction */ "./src/common/interaction.js");
+/* harmony import */ var _state__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./state */ "./src/background/state.js");
+/* harmony import */ var _reactions__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./reactions */ "./src/background/reactions.js");
+
+
+
+
+/* harmony default export */ __webpack_exports__["default"] = ({
+  switchPopup,
+  sendTagData,
+  buildPage,
+  setupClientPage,
+});
+
+async function switchPopup (tab) {
+  const tabState = _state__WEBPACK_IMPORTED_MODULE_1__["default"].getTabState(tab.id);
+  
+  if (typeof tabState === 'undefined') {
+    return await initializePopup(tab);
+  }
+
+  return Object(_common_interaction__WEBPACK_IMPORTED_MODULE_0__["sendMessage"])('popupState', { open: !tabState.popupOpen }).then(() => _state__WEBPACK_IMPORTED_MODULE_1__["default"].setPopupState(tab.id, !tabState.popupOpen));
+}
+
+async function initializePopup (tab) {
+  return browser.tabs.executeScript({ file: '/page-script.js' })
+    .then(() => _state__WEBPACK_IMPORTED_MODULE_1__["default"].setTabState(tab.id, { ...tab, popupOpen: true }))
+    .then(() => Object(_common_interaction__WEBPACK_IMPORTED_MODULE_0__["sendMessage"])('saveTabId', { tabId: tab.id }))
+}
+
+async function sendTagData ({ tabId }) {
+  const data = await _reactions__WEBPACK_IMPORTED_MODULE_2__["default"].getData({ tabId });
+  Object(_common_interaction__WEBPACK_IMPORTED_MODULE_0__["sendMessage"])('getData', data);
+}
+
+function buildPage ( tabId, list, pageNum) {
+  Object(_common_interaction__WEBPACK_IMPORTED_MODULE_0__["sendMessageToTab"])(tabId, 'buildPage', { list, pageNum });
+}
+
+function setupClientPage (tabState) {
+  return Object(_common_interaction__WEBPACK_IMPORTED_MODULE_0__["sendMessageToTab"])(tabState.tabId, 'setupClientPage', tabState);
+}
+
+
+/***/ }),
+
+/***/ "./src/background/parse.js":
+/*!*********************************!*\
+  !*** ./src/background/parse.js ***!
+  \*********************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _common__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./common */ "./src/background/common.js");
+
+
+/* harmony default export */ __webpack_exports__["default"] = (parseRawOptions);
 
 const EXTENSION_PREFIX = 'h';
 const SPACE_REGEXP = /\s+/g;
 const DEFAULT_START = new Date(0);
 const DEFAULT_END = new Date(9999, 11, 31);
-const RESULTS_SAVE_KEY = 'results';
-const FAVICON_SAVE_KEY = 'favicon';
-const TIME_FRAMES_KEY = 'timeFrames';
-const CONTENT_PAGE_URL = '/history_page/index.html';
 
 const DATE_REGEXPS = [
   { type: 'FullYear', regexp: /\/(\d{4})\// },
@@ -1309,6 +1440,8 @@ const DATE_REGEXPS = [
   { type: 'Hours', regexp: /(\d{1,2})\:/ },
   { type: 'Minutes', regexp: /\:(\d{1,2})/ },
 ];
+
+const DATE_TYPES = ['FullYear', 'Month', 'Date', 'Hours', 'Minutes'];
 
 const TIME_FRAMES = {
   FullYear: { start: () => 0, end: () => 9999 },
@@ -1320,7 +1453,6 @@ const TIME_FRAMES = {
 
 const LAST_DAYS_OF_MONTHS = [31, [28, 29], 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 
-const DATE_TYPES = ['FullYear', 'Month', 'Date', 'Hours', 'Minutes'];
 const SORT_TYPES = ['date', 'visit', 'url', 'title']
 const REAL_SORT_TYPES = []
   .concat( SORT_TYPES.map((type) => '>' + type) )
@@ -1328,96 +1460,9 @@ const REAL_SORT_TYPES = []
   .concat( SORT_TYPES.map((type) => '<' + type) )
   .concat( SORT_TYPES.map((type) => '<' + type[0]) );
 
-const STRING_FILTERS = {
-  '+url': (obj, str) => has(obj.url.toLowerCase(), str),
-  '+title': (obj, str) => has(obj.title.toLowerCase(), str),
-  '-url': (obj, str) => !has(obj.url.toLowerCase(), str),
-  '-title': (obj, str) => !has(obj.title.toLowerCase(), str),
-};
-
-const STATE = {};
-
-const actions = {
-  movePage,
-  jumpToPage,
-};
-
-browser.omnibox.onInputEntered.addListener(findAndRender);
-browser.runtime.onMessage.addListener(onMessage);
-browser.storage.onChanged.addListener(onStorageChange);
-browser.tabs.onRemoved.addListener(cleanStorage);
-browser.tabs.onUpdated.addListener(onFaviconUpdated);
-
-loadSettings();
-
-function loadSettings () {
-  const settings_names = Object.keys(_values__WEBPACK_IMPORTED_MODULE_0__["DEFAULT_SETTINGS"]);
-  browser.storage.local.get(settings_names).then((savedOptions) => {
-    
-    for (let key in _values__WEBPACK_IMPORTED_MODULE_0__["DEFAULT_SETTINGS"]) {
-      if (typeof savedOptions[key] === 'undefined') {
-        savedOptions[key] = _values__WEBPACK_IMPORTED_MODULE_0__["DEFAULT_SETTINGS"][key];
-        browser.storage.local.set({ [key]: savedOptions[key] });
-      }
-    }
-
-    Object.assign(STATE, savedOptions);
-  });
-}
-
-function onStorageChange (changes) {
-  for (let key in changes) {
-    if (_values__WEBPACK_IMPORTED_MODULE_0__["DEFAULT_SETTINGS"][key]) {
-      STATE[key] = changes[key].newValue;
-    }
-  }
-}
-
-function onFaviconUpdated (tabId, changedInfo, tab) {
-  const origin = tab.url.split('/').slice(0, 3).join('/')
-  browser.storage.local.set({ [origin + FAVICON_SAVE_KEY]: changedInfo.favIconUrl });
-}
-
-function onMessage (message) {
-  if (message.action) {
-    actions[message.action](message);
-  }
-}
-
-function sendMessageToTab (tabId, action, payload) {
-  const message = Object.assign({ action, background: true }, payload);
-  return browser.tabs.sendMessage(tabId, message);
-}
-
-function cleanStorage (tabId) {
-  if (STATE[tabId]) {
-    removeResults(tabId, 0, STATE[tabId].totalPages);
-    delete STATE[tabId];
-  }
-}
-
-function findAndRender (rawString) {
-  const options = prepareOptions(rawString);
-  const searchTerms = options.base.join(' ');
-
-  createExtensionTab()
-    .then((tab) => {
-      searchHistory(searchTerms, options.timeFrames)
-        .then((results) => handleResults(results, options))
-        .then((results) => saveResults(tab.id, results, 0))
-        .then((results) => saveTabState(tab.id, results, options))
-        .then((tabState) => setupClientPage(tabState)
-          .then(() => showResults(options)));
-    });
-}
-
-function createExtensionTab () {
-  return browser.tabs.create({ active: true, url: CONTENT_PAGE_URL });
-}
-
-function prepareOptions (rawString) {
+function parseRawOptions (rawString) {
   const rawOptions = rawString.split(SPACE_REGEXP).filter((str) => !!str);
-  const options = { base: [], timeFrames: [], sort: [], query: rawString, fullQuery: EXTENSION_PREFIX + ' ' + rawString };
+  const options = { base: [], timeFrames: [], sort: [], tags: [], query: rawString, fullQuery: EXTENSION_PREFIX + ' ' + rawString };
   parseOptions(rawOptions, options, 'base');
   flattenTimes (options);
 
@@ -1425,19 +1470,11 @@ function prepareOptions (rawString) {
     options.timeFrames.push({ start: DEFAULT_START, end: DEFAULT_END });
   }
 
+  if (options.tags.length) {
+    options['+urlortitle'] = (options['+urlortitle'] || []).concat( options.base );
+  }
+
   return options;
-}
-
-function searchHistory (searchTerms, timeFrames) {
-  const historyRequests = timeFrames.map((timeFrame) => makeHistoryRequest(searchTerms, timeFrame.start.getTime(), timeFrame.end.getTime()));
-
-  return Promise.all(historyRequests).then(flattenArray);
-}
-
-function handleResults (results, options) {
-  const filteredResults = filterResults(results, options);
-  const sortedResults = sortResults(filteredResults, options.sort);
-  return Promise.resolve(sortedResults);
 }
 
 function parseOptions (rawOptions, options, curOption) {
@@ -1459,12 +1496,17 @@ function parseOptions (rawOptions, options, curOption) {
       continue;
     }
 
-    if (has(REAL_SORT_TYPES, word)) {
+    if (Object(_common__WEBPACK_IMPORTED_MODULE_0__["has"])(REAL_SORT_TYPES, word)) {
       options.sort.push(word);
       continue;
     }
 
-    if (STRING_FILTERS[word]) {
+    if (isTag(word)) {
+      options.tags.push( word.slice(1) );
+      continue;
+    }
+
+    if (_common__WEBPACK_IMPORTED_MODULE_0__["STRING_FILTERS"][word]) {
       if (!options[word]) {
         options[word] = [];
       }
@@ -1476,20 +1518,38 @@ function parseOptions (rawOptions, options, curOption) {
   }
 }
 
-function has (str, substr) {
-  return str.indexOf(substr) >= 0;
-}
+function flattenTimes (options) {
+  const flattenedTimes = [];
 
-function isExactDate (str) {
-  return /^\=[\/\:]?\d+/.test(str);
-}
+  let cur;
+  let next;
+  for (let i = 0; i < options.timeFrames.length; i++) {
+    cur = options.timeFrames[i];
+    next = options.timeFrames[i + 1];
 
-function isStartDate (str) {
-  return /^\+[\/\:]?\d+/.test(str);
-}
+    if (next && cur.start < next.start && cur.end > next.start && cur.end < next.end) {
+      options.timeFrames[i + 1] = { start: next.start, end: cur.end };
+      continue;
+    }
 
-function isEndDate (str) {
-  return /^\-[\/\:]?\d+/.test(str);
+    if (next && cur.end > next.end && cur.start < next.end && cur.start > next.start) {
+      options.timeFrames[i + 1] = { start: cur.start, end: next.end };
+      continue;
+    }
+
+    if (next && cur.start < next.start && cur.end > next.end) {
+      options.timeFrames[i + 1] = cur;
+      continue;
+    }
+
+    if (next && cur.start > next.start && cur.end < next.end) {
+      continue;
+    }
+
+    flattenedTimes.push(cur);
+  }
+
+  options.timeFrames = flattenedTimes;
 }
 
 function createDate (dateArg, borderType) {
@@ -1537,58 +1597,52 @@ function isLeapYear (year) {
   return 0;
 }
 
-function flattenTimes (options) {
-  const flattenedTimes = [];
-
-  let cur;
-  let next;
-  for (let i = 0; i < options.timeFrames.length; i++) {
-    cur = options.timeFrames[i];
-    next = options.timeFrames[i + 1];
-
-    if (next && cur.start < next.start && cur.end > next.start && cur.end < next.end) {
-      options.timeFrames[i + 1] = { start: next.start, end: cur.end };
-      continue;
-    }
-
-    if (next && cur.end > next.end && cur.start < next.end && cur.start > next.start) {
-      options.timeFrames[i + 1] = { start: cur.start, end: next.end };
-      continue;
-    }
-
-    if (next && cur.start < next.start && cur.end > next.end) {
-      options.timeFrames[i + 1] = cur;
-      continue;
-    }
-
-    if (next && cur.start > next.start && cur.end < next.end) {
-      continue;
-    }
-
-    flattenedTimes.push(cur);
-  }
-
-  options.timeFrames = flattenedTimes;
+function isExactDate (str) {
+  return /^\=[\/\:]?\d+/.test(str);
 }
 
-function makeHistoryRequest (text, startTime, endTime) {
-  return browser.history.search({ text, startTime, endTime, maxResults: 2147483647 });
+function isStartDate (str) {
+  return /^\+[\/\:]?\d+/.test(str);
 }
 
-function flattenArray (arr) {
-  return arr.reduce((a, c) => {
-    a.splice.apply(a, [a.length, 0].concat(c));
-    return a;
-  },[]);
+function isEndDate (str) {
+  return /^\-[\/\:]?\d+/.test(str);
+}
+
+function isTag (str) {
+  return /^!.*/.test(str);
+}
+
+
+/***/ }),
+
+/***/ "./src/background/postProcess.js":
+/*!***************************************!*\
+  !*** ./src/background/postProcess.js ***!
+  \***************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _common__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./common */ "./src/background/common.js");
+
+
+/* harmony default export */ __webpack_exports__["default"] = (postProcess);
+
+function postProcess (results, options) {
+  const filteredResults = filterResults(results, options);
+  const sortedResults = sortResults(filteredResults, options.sort);
+  return sortedResults;
 }
 
 function filterResults (results, options) {
 
   for (let key in options) {
-    if (STRING_FILTERS[key]) {
+    if (_common__WEBPACK_IMPORTED_MODULE_0__["STRING_FILTERS"][key]) {
       const strings = options[key];
       strings.forEach((string) => {
-        results = results.filter((obj) => STRING_FILTERS[key](obj, string.toLowerCase()));
+        results = results.filter((obj) => _common__WEBPACK_IMPORTED_MODULE_0__["STRING_FILTERS"][key](obj, string.toLowerCase()));
       });
     }
   }
@@ -1641,49 +1695,263 @@ function sortResults (results, sortRules) {
   return orderedResults;
 }
 
-function saveResults (tabId, results, pageNum) {
-  const list = results.slice(pageNum * STATE.PAGE_SIZE, pageNum * STATE.PAGE_SIZE + STATE.PAGE_SIZE);
+/***/ }),
+
+/***/ "./src/background/reactions.js":
+/*!*************************************!*\
+  !*** ./src/background/reactions.js ***!
+  \*************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _state__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./state */ "./src/background/state.js");
+/* harmony import */ var _search__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./search */ "./src/background/search.js");
+/* harmony import */ var _tags__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./tags */ "./src/background/tags.js");
+/* harmony import */ var _postProcess__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./postProcess */ "./src/background/postProcess.js");
+/* harmony import */ var _parse__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./parse */ "./src/background/parse.js");
+/* harmony import */ var _show__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./show */ "./src/background/show.js");
+/* harmony import */ var _messages__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./messages */ "./src/background/messages.js");
+/* harmony import */ var _common_interaction__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../common/interaction */ "./src/common/interaction.js");
+const browser = __webpack_require__(/*! webextension-polyfill */ "./node_modules/webextension-polyfill/dist/browser-polyfill.js");
+
+
+
+
+
+
+
+
+
+
+/* harmony default export */ __webpack_exports__["default"] = ({
+  movePage,
+  jumpToPage,
+  getData,
+  addTagToPage,
+  removeTagFromPage,
+  getAllTags,
+  createTag,
+  removeTag,
+  continueBuildingPage,
+  saveSearchQuery,
+  removeSearchQuery,
+  startSearch,
+  openSettings,
+  openHelp,
+});
+
+const CONTENT_PAGE_URL = '/history_page/index.html';
+const SETTINGS_PAGE_URL = '/options/options.html';
+const HELP_PAGE_URL = '/help/help.html';
+
+function movePage (message) {
+  const tabState = _state__WEBPACK_IMPORTED_MODULE_0__["default"].getTabState(message.tabId);
+  const newPageNum = increment(tabState.pageNum, message.inc, [0, tabState.totalPages - 1]);
+  tabState.pageNum = newPageNum;
+  Object(_show__WEBPACK_IMPORTED_MODULE_5__["default"])(tabState);
+}
+
+function increment (num, inc, range) {
+  const newNum = num + inc;
+  if (newNum > range[1]) {
+    return range[0];
+  }
+
+  if (newNum < range[0]) {
+    return range[1];
+  }
+
+  return newNum;
+}
+
+function jumpToPage (message) {
+  const tabState = _state__WEBPACK_IMPORTED_MODULE_0__["default"].getTabState(message.tabId);
+
+  if (message.pageNum > tabState.totalPages || message.pageNum < 1) {
+    return;
+  }
+
+  tabState.pageNum = message.pageNum - 1;
+  Object(_show__WEBPACK_IMPORTED_MODULE_5__["default"])(tabState);
+}
+
+async function getData () {
+  const pageData = await Object(_common_interaction__WEBPACK_IMPORTED_MODULE_7__["getCurrentTab"])();
+
+  return {
+    allExistingTags: await _tags__WEBPACK_IMPORTED_MODULE_2__["default"].getAll(),
+    assignedTags: await _tags__WEBPACK_IMPORTED_MODULE_2__["default"].getForPage(pageData),
+    savedSearches: await _state__WEBPACK_IMPORTED_MODULE_0__["default"].getSavedSearches(),
+  }
+}
+
+async function addTagToPage ({ tag }) {
+  const allExistingTags = await _tags__WEBPACK_IMPORTED_MODULE_2__["default"].create(tag);
+
+  const pageData = await Object(_common_interaction__WEBPACK_IMPORTED_MODULE_7__["getCurrentTab"])();
+  await _tags__WEBPACK_IMPORTED_MODULE_2__["default"].addToPage(tag, pageData);
+  const tagsForPage = await _tags__WEBPACK_IMPORTED_MODULE_2__["default"].getForPage(pageData);
   
-  if (!list.length) {
-    return results;
-  }
-
-  return browser.storage.local.set({ [tabId + RESULTS_SAVE_KEY + pageNum]: list }).then(() => saveResults(tabId, results, pageNum + 1));
+  return { allExistingTags, assignedTags: tagsForPage };
 }
 
-function removeResults (tabId, pageNum, pagesLength) {
-  if (pageNum > pagesLength) {
-    return true;
-  }
-
-  return browser.storage.local.remove(tabId + RESULTS_SAVE_KEY + pageNum).then(() => removeResults(tabId, pageNum + 1, pagesLength));
+async function removeTagFromPage ({ tag }) {
+  const pageData = await Object(_common_interaction__WEBPACK_IMPORTED_MODULE_7__["getCurrentTab"])();
+  await _tags__WEBPACK_IMPORTED_MODULE_2__["default"].removeFromPage(tag, pageData);
+  return { assignedTags: await _tags__WEBPACK_IMPORTED_MODULE_2__["default"].getForPage(pageData) };
 }
 
-function saveTabState (tabId, results, options) {
-  return STATE[tabId] = Object.assign(options, {
-    pageNum: 0,
-    totalCount: results.length,
-    totalPages: Math.ceil(results.length / STATE.PAGE_SIZE),
-    tabId,
-    color: STATE.COLOR,
+async function getAllTags () {
+  return { allExistingTags: await _tags__WEBPACK_IMPORTED_MODULE_2__["default"].getAll() };
+}
+
+async function createTag ({ tag }) {
+  return { allExistingTags: await _tags__WEBPACK_IMPORTED_MODULE_2__["default"].create(tag) }
+}
+
+async function removeTag ({ tag }) {
+  return { allExistingTags: await _tags__WEBPACK_IMPORTED_MODULE_2__["default"].remove(tag) };
+}
+
+function startSearch ({ query }) {
+  return browser.tabs.create({ active: true, url: CONTENT_PAGE_URL })
+    .then((tab) => _state__WEBPACK_IMPORTED_MODULE_0__["default"].setTabState(tab.id, { tab, query }));
+}
+
+function continueBuildingPage ({ tabId }) {
+  const { query, tab } = _state__WEBPACK_IMPORTED_MODULE_0__["default"].getTabState(tabId);
+  const options = Object(_parse__WEBPACK_IMPORTED_MODULE_4__["default"])(query);
+
+  let baseSearch;
+  if (options.tags.length) {
+    baseSearch = _search__WEBPACK_IMPORTED_MODULE_1__["default"].tags(options.tags);
+  } else {
+    const searchTerms = options.base.join(' ');
+    baseSearch = _search__WEBPACK_IMPORTED_MODULE_1__["default"].history(searchTerms, options.timeFrames);
+  }
+
+  baseSearch.then((results) => {
+    const handledResults = Object(_postProcess__WEBPACK_IMPORTED_MODULE_3__["default"])(results, options);
+    _state__WEBPACK_IMPORTED_MODULE_0__["default"].saveResults(tab.id, handledResults, 0).then(() => {
+      _state__WEBPACK_IMPORTED_MODULE_0__["default"].initTabState(tab.id, handledResults, options).then((tabState) => {
+        _messages__WEBPACK_IMPORTED_MODULE_6__["default"].setupClientPage(tabState).then(() => Object(_show__WEBPACK_IMPORTED_MODULE_5__["default"])(tabState));
+      });
+    });
   });
 }
 
-function setupClientPage (tabState) {
-  return sendMessageToTab(tabState.tabId, 'setupClientPage', tabState);
+function saveSearchQuery ({ query }) {
+  return _state__WEBPACK_IMPORTED_MODULE_0__["default"].saveSearch(query).then(() => ({ saved: true }));
 }
 
-function showResults (opts) {
-  const listKey = opts.tabId + RESULTS_SAVE_KEY + opts.pageNum;
-
-  browser.storage.local.get(listKey)
-    .then((storageData) => getAllVisits(storageData[listKey], opts)
-      .then((list) => sendMessageToTab(opts.tabId, 'buildPage', { list, pageNum: opts.pageNum + 1 })));
+async function removeSearchQuery ({ query }) {
+  return { savedSearches: await _state__WEBPACK_IMPORTED_MODULE_0__["default"].removeSearch(query), saved: false }; 
 }
 
-function getAllVisits (historyList, opts) {
+function openSettings () {
+  browser.tabs.create({ active: true, url: SETTINGS_PAGE_URL }).then((tab) => _state__WEBPACK_IMPORTED_MODULE_0__["default"].setTabState(tab.id, true));
+}
+
+function openHelp () {
+  browser.tabs.create({ active: true, url: HELP_PAGE_URL });
+}
+
+
+/***/ }),
+
+/***/ "./src/background/search.js":
+/*!**********************************!*\
+  !*** ./src/background/search.js ***!
+  \**********************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _tags__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./tags */ "./src/background/tags.js");
+/* harmony import */ var _state__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./state */ "./src/background/state.js");
+const browser = __webpack_require__(/*! webextension-polyfill */ "./node_modules/webextension-polyfill/dist/browser-polyfill.js");
+
+
+
+
+/* harmony default export */ __webpack_exports__["default"] = ({
+  history: searchHistory,
+  tags: searchTags,
+  visitsForHistory: getVisitsForHistoryEntries,
+});
+
+function searchHistory (searchTerms, timeFrames) {
+  const historyRequests = timeFrames.map((timeFrame) => makeHistoryRequest(searchTerms, timeFrame.start.getTime(), timeFrame.end.getTime()));
+
+  return Promise.all(historyRequests).then(flattenArray);
+}
+
+function makeHistoryRequest (text, startTime, endTime) {
+  return browser.history.search({ text, startTime, endTime, maxResults: 2147483647 });
+}
+
+function flattenArray (arr) {
+  return arr.reduce((a, c) => {
+    a.splice.apply(a, [a.length, 0].concat(c));
+    return a;
+  },[]);
+}
+
+function searchTags (tags) {
+  const tagedPagesRequests = tags.map((tag) => _tags__WEBPACK_IMPORTED_MODULE_0__["default"].getTagedPages(tag));
+  return Promise.all(tagedPagesRequests).then(getIntersections);
+}
+
+function getIntersections(arrs) {
+  let pages = {};
+
+  arrs.forEach((arr, i) => {
+
+    if (!i) {
+      pages = arr;
+    } else {
+      pages = getIntersection(pages, arr);
+    }
+
+  });
+
+  for (let key in pages) {
+    pages[key].url = key;
+  }
+
+  return Object.values(pages);
+}
+
+function getIntersection (a, b) {
+  const usedKeys = {};
+  const intersection = {};
+
+  for (let key in a) {
+    if (b[key]) {
+      intersection[key] = a[key];
+    }
+    usedKeys[key] = true;
+  }
+
+  for (let key in b) {
+    if (usedKeys[key]) {
+      continue;
+    }
+
+    if (a[key]) {
+      intersection[key] = a[key];
+    }
+  }
+
+  return intersection;
+}
+
+function getVisitsForHistoryEntries (historyList, opts) {
   if (!historyList) {
-    return [];
+    return Promise.resolve([]);
   }
 
   if (historyList.visitsLoaded) {
@@ -1694,8 +1962,7 @@ function getAllVisits (historyList, opts) {
   return Promise.all(visitRequests)
     .then((historyWithVisits) => {
       historyWithVisits.visitsLoaded = true;
-      return browser.storage.local.set({ [opts.tabId + RESULTS_SAVE_KEY + opts.pageNum]: historyWithVisits })
-        .then(() => historyWithVisits);
+      return _state__WEBPACK_IMPORTED_MODULE_1__["default"].saveResultsPage(opts.tabId, opts.pageNum, historyWithVisits).then(() => historyWithVisits);
     });
 }
 
@@ -1722,63 +1989,50 @@ function isWithinTimeFrames (visitItem, timeFrames) {
   return acceptable;
 }
 
-function generateStyleString (color) {
-  const lightBackground = `background-color: rgba(${color}, 0.2);`;
-  const darkBackground = `background-color: rgba(${color}, 0.7);`;
 
-  return `
-    tr:nth-child(odd) { ${lightBackground} }
-    tr:hover { ${darkBackground} }
-    .query:hover { ${lightBackground} }
-    .query:active { ${darkBackground} }
-  `;
-}
+/***/ }),
 
-function movePage (message) {
-  const tabState = STATE[message.tabId];
-  const newPageNum = increment(tabState.pageNum, message.inc, [0, tabState.totalPages - 1]);
-  tabState.pageNum = newPageNum;
-  showResults(tabState);
-}
+/***/ "./src/background/show.js":
+/*!********************************!*\
+  !*** ./src/background/show.js ***!
+  \********************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
-function increment (num, inc, range) {
-  const newNum = num + inc;
-  if (newNum > range[1]) {
-    return range[0];
-  }
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return showResults; });
+/* harmony import */ var _search__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./search */ "./src/background/search.js");
+/* harmony import */ var _messages__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./messages */ "./src/background/messages.js");
+/* harmony import */ var _state__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./state */ "./src/background/state.js");
 
-  if (newNum < range[0]) {
-    return range[1];
-  }
 
-  return newNum;
-}
 
-function jumpToPage (message) {
-  const tabState = STATE[message.tabId];
 
-  if (message.pageNum > tabState.totalPages || message.pageNum < 1) {
-    return;
-  }
-
-  tabState.pageNum = message.pageNum - 1;
-  showResults(tabState);
+function showResults (opts) {
+  _state__WEBPACK_IMPORTED_MODULE_2__["default"].getResultsPage(opts.tabId, opts.pageNum)
+    .then((list) => _search__WEBPACK_IMPORTED_MODULE_0__["default"].visitsForHistory(list, opts)
+    .then((listWithVisits) => _messages__WEBPACK_IMPORTED_MODULE_1__["default"].buildPage(opts.tabId, listWithVisits, opts.pageNum + 1)))
 }
 
 
 /***/ }),
 
-/***/ "./src/values.js":
-/*!***********************!*\
-  !*** ./src/values.js ***!
-  \***********************/
-/*! exports provided: COLOR_SCHEMES, DEFAULT_SETTINGS */
+/***/ "./src/background/state.js":
+/*!*********************************!*\
+  !*** ./src/background/state.js ***!
+  \*********************************/
+/*! exports provided: SETTINGS, default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "COLOR_SCHEMES", function() { return COLOR_SCHEMES; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "DEFAULT_SETTINGS", function() { return DEFAULT_SETTINGS; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "SETTINGS", function() { return SETTINGS; });
+const browser = __webpack_require__(/*! webextension-polyfill */ "./node_modules/webextension-polyfill/dist/browser-polyfill.js");
+
+const RESULTS_SAVE_KEY = 'results';
+const SEARCHES_SAVE_KEY = 'searches'
+
 const COLOR_SCHEMES = {
   grey: '210, 210, 210',
   green: '169, 255, 148',
@@ -1789,8 +2043,337 @@ const COLOR_SCHEMES = {
 
 const DEFAULT_SETTINGS = {
   PAGE_SIZE: 300,
-  COLOR: '210, 210, 210', // grey
+  COLOR: 'grey',
 };
+
+const STATE = {
+  tabs: {},
+};
+
+const SETTINGS = {
+  COLOR_SCHEMES,
+  DEFAULT: DEFAULT_SETTINGS,
+};
+
+/* harmony default export */ __webpack_exports__["default"] = ({
+  getTabState,
+  setTabState,
+  setPopupState,
+  loadSettings,
+  onSettingsChange,
+  saveResults,
+  removeResults,
+  initTabState,
+  removeTabState,
+  getResultsPage,
+  saveResultsPage,
+  removeResultsPage,
+  getSavedSearches,
+  saveSearch,
+  removeSearch,
+  isSearchSaved,
+});
+
+function getTabState (tabId) {
+  return STATE.tabs[ tabId ];
+}
+
+function setTabState (tabId, state) {
+  return STATE.tabs[ tabId ] = state;
+}
+
+function setPopupState (tabId, state) {
+  return STATE.tabs[ tabId ].popupOpen = state;
+}
+
+async function initTabState (tabId, results, options) {
+  return setTabState(tabId, {
+    ...options,
+    pageNum: 0,
+    totalCount: results.length,
+    totalPages: Math.ceil(results.length / SETTINGS.PAGE_SIZE),
+    tabId,
+    color: COLOR_SCHEMES[ SETTINGS.COLOR ],
+    isSaved: await isSearchSaved(options.query),
+  });
+}
+
+function loadSettings () {
+  const settings_names = Object.keys(DEFAULT_SETTINGS);
+  browser.storage.local.get(settings_names).then((savedOptions) => {
+    
+    for (let key in DEFAULT_SETTINGS) {
+      if (typeof savedOptions[key] === 'undefined') {
+        savedOptions[key] = DEFAULT_SETTINGS[key];
+        browser.storage.local.set({ [key]: savedOptions[key] });
+      }
+    }
+
+    Object.assign(SETTINGS, savedOptions);
+  });
+}
+
+function onSettingsChange (changes) {
+  for (let key in changes) {
+    if (DEFAULT_SETTINGS[key]) {
+      SETTINGS[key] = changes[key].newValue;
+    }
+  }
+}
+
+function saveResults (tabId, results, pageNum) {
+  const list = results.slice(pageNum * SETTINGS.PAGE_SIZE, pageNum * SETTINGS.PAGE_SIZE + SETTINGS.PAGE_SIZE);
+  
+  if (!list.length) {
+    return Promise.resolve(results);
+  }
+
+  return saveResultsPage(tabId, pageNum, list).then(() => saveResults(tabId, results, pageNum + 1));
+}
+
+function removeResults (tabId, pageNum, pagesLength) {
+  if (pageNum > pagesLength) {
+    return true;
+  }
+
+  return removeResultsPage(tabId, pageNum).then(() => removeResults(tabId, pageNum + 1, pagesLength));
+}
+
+function removeTabState (tabId) {
+  removeResults(tabId, 0, getTabState(tabId).totalPages || 0);
+  setTabState(tabId, undefined);
+}
+
+function getResultsPage (tabId, pageNum) {
+  const listKey = tabId + RESULTS_SAVE_KEY + pageNum;
+  return browser.storage.local.get(listKey).then((savedResults) => savedResults[listKey]);
+}
+
+function saveResultsPage (tabId, pageNum, list) {
+  return browser.storage.local.set({ [tabId + RESULTS_SAVE_KEY + pageNum]: list });
+}
+
+function removeResultsPage (tabId, pageNum) {
+  return browser.storage.local.remove(tabId + RESULTS_SAVE_KEY + pageNum);
+}
+
+function getSavedSearches () {
+  return browser.storage.local.get(SEARCHES_SAVE_KEY).then((result) => result[SEARCHES_SAVE_KEY] || []);
+}
+
+function setSavedSearches (searches) {
+  return browser.storage.local.set({ [SEARCHES_SAVE_KEY]: searches });
+}
+
+async function isSearchSaved (searchString) {
+  const allSearches = await getSavedSearches();
+  return allSearches.includes(searchString);
+} 
+
+async function saveSearch (searchString) {
+  const allSearches = await getSavedSearches();
+  
+  if (!allSearches.includes(searchString)) {
+    allSearches.unshift(searchString);
+    await setSavedSearches(allSearches);
+  }
+  
+  return allSearches;
+}
+
+async function removeSearch (searchString) {
+  const allSearches = await getSavedSearches();
+  allSearches.splice( allSearches.indexOf(searchString), 1);
+  await setSavedSearches(allSearches);
+  return allSearches;
+}
+
+
+/***/ }),
+
+/***/ "./src/background/tags.js":
+/*!********************************!*\
+  !*** ./src/background/tags.js ***!
+  \********************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+const browser = __webpack_require__(/*! webextension-polyfill */ "./node_modules/webextension-polyfill/dist/browser-polyfill.js");
+
+const ALL_TAGS_KEY = 'ALL_TAGS';
+const TAG_KEY_PREFIX = 'TAG_KEY';
+
+/* harmony default export */ __webpack_exports__["default"] = ({
+  create: createTag,
+  remove: removeTag,
+  getAll: getAllTags,
+  setAll: setAllTags,
+  getForPage: getTagsForPage,
+  addToPage: addTagToPage,
+  removeFromPage: removeTagFromPage,
+  getTagedPages: getTagedPages,
+  setTagedPages: setTagedPages,
+});
+
+function getAllTags () {
+  return browser.storage.local.get(ALL_TAGS_KEY).then((savedResults) => savedResults[ALL_TAGS_KEY] || []);
+}
+
+function setAllTags (tags) {
+  return browser.storage.local.set({ [ALL_TAGS_KEY]: tags }).then(() => tags);
+}
+
+function getTagedPages (tag) {
+  const tagKey = TAG_KEY_PREFIX + tag
+  return browser.storage.local.get(tagKey).then((savedResults) => savedResults[tagKey] || {});
+}
+
+function setTagedPages (tag, pages) {
+  const tagKey = TAG_KEY_PREFIX + tag;
+  return browser.storage.local.set({ [tagKey]: pages });
+}
+
+async function addTagToPage (tag, { url, title }) {
+  const tagsPages = await getTagedPages(tag);
+  tagsPages[url] = { title };
+  return setTagedPages(tag, tagsPages)
+}
+
+async function removeTagFromPage (tag, { url}) {
+  const tagsPages = await getTagedPages(tag);
+  delete tagsPages[ url ];
+  return setTagedPages(tag, tagsPages);
+}
+
+async function getTagsForPage ({ url }) {
+  const allExistingTags = await getAllTags();
+  
+  const tagsForPage = [];
+
+  for (let i = 0; i < allExistingTags.length; i++) {
+    const tag = allExistingTags[i];
+    const tagsPages = await getTagedPages(tag);
+
+    if (tagsPages[ url ]) {
+      tagsForPage.push(tag);
+    }
+  }
+
+  return tagsForPage;
+}
+
+async function createTag (tag) {
+  const allExistingTags = await getAllTags();
+
+  if (!allExistingTags.includes(tag)) {
+    allExistingTags.push(tag);
+    allExistingTags.sort();
+    await setAllTags(allExistingTags);
+  }
+
+  return allExistingTags;
+}
+
+async function removeTag (tag) {
+  const allTags = await getAllTags();
+  allTags.splice( allTags.indexOf(tag), 1);
+  browser.storage.local.remove(TAG_KEY_PREFIX + tag);
+  return setAllTags(allTags);
+}
+
+
+/***/ }),
+
+/***/ "./src/common/interaction.js":
+/*!***********************************!*\
+  !*** ./src/common/interaction.js ***!
+  \***********************************/
+/*! exports provided: getCurrentTab, sendMessage, sendMessageToTab, sendMessageToBackground, sendMessageFromBackground, onMessage */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getCurrentTab", function() { return getCurrentTab; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "sendMessage", function() { return sendMessage; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "sendMessageToTab", function() { return sendMessageToTab; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "sendMessageToBackground", function() { return sendMessageToBackground; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "sendMessageFromBackground", function() { return sendMessageFromBackground; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "onMessage", function() { return onMessage; });
+const browser = __webpack_require__(/*! webextension-polyfill */ "./node_modules/webextension-polyfill/dist/browser-polyfill.js");
+
+const PROMISES_RESOLVES = {};
+
+function getCurrentTab () {
+  return browser.tabs.query({ active: true, currentWindow: true }).then((tabs) => tabs[0]);
+}
+
+function sendMessage (action, payload, tabId) {
+  const { callbackId, promise } = payload.callbackId || saveCallback(action);
+  const message = { action, callbackId, ...payload };
+  
+  if (window.__IS_BACKGROUND_SCRIPT__ && !payload.__TO_BACKGROUND__) {
+
+    let getTabId = Promise.resolve(tabId);
+
+    if (!tabId) {
+      getTabId = getCurrentTab().then((tab) => tab.id);
+    }
+
+    getTabId.then((id) => {
+      browser.tabs.sendMessage(id, { ...message, background: true });
+    });
+    
+  } else {
+    browser.runtime.sendMessage(message);
+  }
+
+  return promise;
+}
+
+function sendMessageToTab (tabId, action, payload) {
+  return sendMessage(action, payload, tabId);
+}
+
+function sendMessageToBackground (action, payload) {
+  return sendMessage(action, { ...payload, __TO_BACKGROUND__: true });
+}
+
+function sendMessageFromBackground (action, payload) {
+  return sendMessage(action, { ...payload , __FROM_BACKGROUND__: true,  __TO_BACKGROUND__: true });
+}
+
+async function onMessage (message, actions = {}) {
+  if (message.__TO_BACKGROUND__ && !window.__IS_BACKGROUND_SCRIPT__) {
+    return;
+  }
+
+  if (message.isAnswer) {
+    if (PROMISES_RESOLVES[message.callbackId]) {
+      PROMISES_RESOLVES[message.callbackId](message);
+      delete PROMISES_RESOLVES[message.callbackId];
+    }
+    return;
+  }
+
+  if (actions[message.action]) {
+    const result = await actions[ message.action ](message);
+    
+    if (message.callbackId) {
+      sendMessage(message.action, { callbackId: message.callbackId, isAnswer: true, ...result, __TO_BACKGROUND__: message.__FROM_BACKGROUND__ });
+    }
+  }
+}
+
+function saveCallback (action, cb) {
+  const callbackId = Date.now() + Math.random() + action;
+
+  return {
+    promise: new Promise ((res) => PROMISES_RESOLVES[ callbackId ] = res),
+    callbackId
+  };
+}
 
 
 /***/ })

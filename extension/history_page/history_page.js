@@ -1279,21 +1279,270 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 
 /***/ }),
 
+/***/ "./src/common/interaction.js":
+/*!***********************************!*\
+  !*** ./src/common/interaction.js ***!
+  \***********************************/
+/*! exports provided: getCurrentTab, sendMessage, sendMessageToTab, sendMessageToBackground, sendMessageFromBackground, onMessage */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getCurrentTab", function() { return getCurrentTab; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "sendMessage", function() { return sendMessage; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "sendMessageToTab", function() { return sendMessageToTab; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "sendMessageToBackground", function() { return sendMessageToBackground; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "sendMessageFromBackground", function() { return sendMessageFromBackground; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "onMessage", function() { return onMessage; });
+const browser = __webpack_require__(/*! webextension-polyfill */ "./node_modules/webextension-polyfill/dist/browser-polyfill.js");
+
+const PROMISES_RESOLVES = {};
+
+function getCurrentTab () {
+  return browser.tabs.query({ active: true, currentWindow: true }).then((tabs) => tabs[0]);
+}
+
+function sendMessage (action, payload, tabId) {
+  const { callbackId, promise } = payload.callbackId || saveCallback(action);
+  const message = { action, callbackId, ...payload };
+  
+  if (window.__IS_BACKGROUND_SCRIPT__ && !payload.__TO_BACKGROUND__) {
+
+    let getTabId = Promise.resolve(tabId);
+
+    if (!tabId) {
+      getTabId = getCurrentTab().then((tab) => tab.id);
+    }
+
+    getTabId.then((id) => {
+      browser.tabs.sendMessage(id, { ...message, background: true });
+    });
+    
+  } else {
+    browser.runtime.sendMessage(message);
+  }
+
+  return promise;
+}
+
+function sendMessageToTab (tabId, action, payload) {
+  return sendMessage(action, payload, tabId);
+}
+
+function sendMessageToBackground (action, payload) {
+  return sendMessage(action, { ...payload, __TO_BACKGROUND__: true });
+}
+
+function sendMessageFromBackground (action, payload) {
+  return sendMessage(action, { ...payload , __FROM_BACKGROUND__: true,  __TO_BACKGROUND__: true });
+}
+
+async function onMessage (message, actions = {}) {
+  if (message.__TO_BACKGROUND__ && !window.__IS_BACKGROUND_SCRIPT__) {
+    return;
+  }
+
+  if (message.isAnswer) {
+    if (PROMISES_RESOLVES[message.callbackId]) {
+      PROMISES_RESOLVES[message.callbackId](message);
+      delete PROMISES_RESOLVES[message.callbackId];
+    }
+    return;
+  }
+
+  if (actions[message.action]) {
+    const result = await actions[ message.action ](message);
+    
+    if (message.callbackId) {
+      sendMessage(message.action, { callbackId: message.callbackId, isAnswer: true, ...result, __TO_BACKGROUND__: message.__FROM_BACKGROUND__ });
+    }
+  }
+}
+
+function saveCallback (action, cb) {
+  const callbackId = Date.now() + Math.random() + action;
+
+  return {
+    promise: new Promise ((res) => PROMISES_RESOLVES[ callbackId ] = res),
+    callbackId
+  };
+}
+
+
+/***/ }),
+
 /***/ "./src/history_page.js":
 /*!*****************************!*\
   !*** ./src/history_page.js ***!
   \*****************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
+/*! no exports provided */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _common_interaction__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./common/interaction */ "./src/common/interaction.js");
+/* harmony import */ var _history_page_actions__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./history_page/actions */ "./src/history_page/actions.js");
+/* harmony import */ var _history_page_ui__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./history_page/ui */ "./src/history_page/ui.js");
 const browser = __webpack_require__(/*! webextension-polyfill */ "./node_modules/webextension-polyfill/dist/browser-polyfill.js");
+
+
+
+
+
+_history_page_ui__WEBPACK_IMPORTED_MODULE_2__["default"].generateStyles();
+
+browser.runtime.onMessage.addListener((message) => Object(_common_interaction__WEBPACK_IMPORTED_MODULE_0__["onMessage"])(message, _history_page_actions__WEBPACK_IMPORTED_MODULE_1__["default"]));
+
+browser.tabs.getCurrent().then((tab) => Object(_common_interaction__WEBPACK_IMPORTED_MODULE_0__["sendMessageToBackground"])('continueBuildingPage', { tabId: tab.id }));
+
+
+/***/ }),
+
+/***/ "./src/history_page/actions.js":
+/*!*************************************!*\
+  !*** ./src/history_page/actions.js ***!
+  \*************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _ui__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./ui */ "./src/history_page/ui.js");
+/* harmony import */ var _state__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./state */ "./src/history_page/state.js");
+/* harmony import */ var _common_interaction__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../common/interaction */ "./src/common/interaction.js");
+const browser = __webpack_require__(/*! webextension-polyfill */ "./node_modules/webextension-polyfill/dist/browser-polyfill.js");
+
+
+
+
+
+/* harmony default export */ __webpack_exports__["default"] = ({
+  setupClientPage,
+  buildPage,
+});
+
+function setupClientPage (data) {
+  _ui__WEBPACK_IMPORTED_MODULE_0__["default"].setupElements(data);
+
+  _ui__WEBPACK_IMPORTED_MODULE_0__["default"].assignListeners({
+    '.moveBack': { click: () => movePage(-1) },
+    '.moveForward': { click: () => movePage(1) },
+    '.jumpToPage': { click: () => jumpToPage(_state__WEBPACK_IMPORTED_MODULE_1__["default"].currentPage()) },
+    '.query': { click: () => _ui__WEBPACK_IMPORTED_MODULE_0__["default"].copyQuery() },
+  });
+}
+
+function buildPage (data) {
+  _ui__WEBPACK_IMPORTED_MODULE_0__["default"].buildPage(data);
+}
+
+function movePage (inc) {
+  browser.tabs.getCurrent()
+    .then((tab) => Object(_common_interaction__WEBPACK_IMPORTED_MODULE_2__["sendMessageToBackground"])('movePage', { inc, tabId: tab.id }));
+}
+
+function jumpToPage (defaultPage) {
+  const userInput = window.prompt('Go to page:', defaultPage);
+
+  if (userInput === null) {
+    return;
+  }
+
+  browser.tabs.getCurrent()
+    .then((tab) => Object(_common_interaction__WEBPACK_IMPORTED_MODULE_2__["sendMessageToBackground"])('jumpToPage', { pageNum: +userInput, tabId: tab.id }));
+}
+
+
+/***/ }),
+
+/***/ "./src/history_page/messages.js":
+/*!**************************************!*\
+  !*** ./src/history_page/messages.js ***!
+  \**************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _common_interaction__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../common/interaction */ "./src/common/interaction.js");
+
+
+/* harmony default export */ __webpack_exports__["default"] = ({
+  saveSearchQuery,
+  removeSearchQuery
+});
+
+function saveSearchQuery (query) {
+  return Object(_common_interaction__WEBPACK_IMPORTED_MODULE_0__["sendMessageToBackground"])('saveSearchQuery', { query });
+}
+
+function removeSearchQuery (query) {
+  return Object(_common_interaction__WEBPACK_IMPORTED_MODULE_0__["sendMessageToBackground"])('removeSearchQuery', { query });
+}
+
+
+/***/ }),
+
+/***/ "./src/history_page/state.js":
+/*!***********************************!*\
+  !*** ./src/history_page/state.js ***!
+  \***********************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+const STATE = {
+  currentPage: null,
+  tab: null,
+}
+
+/* harmony default export */ __webpack_exports__["default"] = ({
+  currentPage,
+  tabState,
+});
+
+function currentPage (num) {
+  if (typeof num === 'undefined') {
+    return STATE.currentPage;
+  }
+
+  return STATE.currentPage = num;
+}
+
+function tabState (tab) {
+  if (tab) {
+    STATE.tab = tab;
+  }
+
+  return STATE.tab;
+}
+
+
+/***/ }),
+
+/***/ "./src/history_page/ui.js":
+/*!********************************!*\
+  !*** ./src/history_page/ui.js ***!
+  \********************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _state__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./state */ "./src/history_page/state.js");
+/* harmony import */ var _messages__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./messages */ "./src/history_page/messages.js");
+const browser = __webpack_require__(/*! webextension-polyfill */ "./node_modules/webextension-polyfill/dist/browser-polyfill.js");
+
+
+
 
 const WRAPPER_PADDING = 55;
 const MAX_WRAPPER_WIDTH = 1366;
 const VISIT_COUNTS_WIDTH = 45;
 const LAST_VISIT_TIME_WIDTH = 130;
 const INFO_PANEL_HEIGHT = 67;
-const SETTINGS_PAGE_URL = '/options/options.html';
+
 const FAVICON_SAVE_KEY = 'favicon';
 const DEFAULT_FAVICON_PATH = '/favicon.ico';
 
@@ -1303,6 +1552,7 @@ const CURRENT_PAGE_EL = document.querySelector('.pageNum');
 const TABLE_CONTAINER_EL = document.querySelector('.table-container');
 const SPINNER_EL = document.querySelector('.spinner');
 const FULL_QUERY_EL = document.querySelector('.fullQuery');
+const SAVE_BUTTON = document.querySelector('.saveButton');
 
 const ROW_OPTS = {
   title: { name: 'Title', value: createTitle },
@@ -1311,59 +1561,58 @@ const ROW_OPTS = {
   visitTimes: { name: ' ', value: createVisitCount },
 };
 
-generateStyles();
-
-document.querySelector('.moveBack').onclick = () => movePage(-1);
-document.querySelector('.moveForward').onclick = () => movePage(1);
-document.querySelector('.jumpToPage').onclick = () => jumpToPage(CURRENT_PAGE);
-document.querySelector('.settings').onclick = () => openSettings();
-document.querySelector('.query').onclick = () => copyQuery();
-
-const actions = {
-  setupClientPage,
-  buildPage,
-};
-
 const ICONS_URLS = {};
 
-let CURRENT_PAGE;
+const UI_SELECTORS = [ 'query', 'fullQuery', 'pageNum', 'totalPages', 'totalCount' ];
 
-browser.runtime.onMessage.addListener(onMessage);
+/* harmony default export */ __webpack_exports__["default"] = ({
+  setupElements,
+  buildPage,
+  generateStyles,
+  assignListeners,
+  copyQuery,
+});
 
-function onMessage (message) {
-  if (!message.background) {
-    return;
-  }
+function setupElements (data) {
+  UI_SELECTORS.forEach((selector) => {
+    const el = document.querySelector('.' + selector);
 
-  actions[message.action](message);
-}
-
-function setupClientPage (data) {
-  for (let key in data) {
-    const el = document.querySelector('.' + key);
-
-    if (el) {
-
-      if (typeof el.value !== 'undefined') {
-        el.value = data[key];
-        continue;
-      }
-
-      writeToNode(el, data[key]);
+    if (typeof el.value !== 'undefined') {
+      el.value = data[selector];
+      return;
     }
-  }
+
+    writeToNode(el, data[selector]);
+  });
 
   document.title = data.query;
+  setSaveButton(data.isSaved);
+
+  _state__WEBPACK_IMPORTED_MODULE_0__["default"].tabState(data);
 
   generateColorScheme(data.color);
 }
 
-function buildPage (message) {
+function generateColorScheme (color) {
+  const lightBackground = `background-color: rgba(${color}, 0.2);`;
+  const darkBackground = `background-color: rgba(${color}, 0.7);`;
+
+  const colorScheme = `
+    tr:nth-child(odd) { ${lightBackground} }
+    tr:hover { ${darkBackground} }
+    .query:hover { ${lightBackground} }
+    .query:active { ${darkBackground} }
+  `;
+
+  appendStyles(colorScheme);
+}
+
+function buildPage (data) {
   emptyNode(TABLE_CONTAINER_EL);
-  const table = createTable(message.list);
+  const table = createTable(data.list);
   TABLE_CONTAINER_EL.appendChild(table);
-  CURRENT_PAGE = message.pageNum;
-  writeToNode(CURRENT_PAGE_EL, message.pageNum);
+  _state__WEBPACK_IMPORTED_MODULE_0__["default"].currentPage(data.pageNum);
+  writeToNode(CURRENT_PAGE_EL, data.pageNum);
 
   WRAPPER_EL.classList.add('white');
   SUMMARY_EL.classList.remove('hidden');
@@ -1450,6 +1699,10 @@ function createLink (values) {
 
 function createDate (values) {
   const span = document.createElement('span');
+  if (!values.visitTimes.length) {
+    return span;
+  }
+
   const dateString = generateDateString(values.visitTimes[0].visitTime);
   writeToNode(span, dateString);
 
@@ -1520,46 +1773,28 @@ function generateStyles () {
   appendStyles(stylesStr);
 }
 
-function generateColorScheme (color) {
-  const lightBackground = `background-color: rgba(${color}, 0.2);`;
-  const darkBackground = `background-color: rgba(${color}, 0.7);`;
-
-  const colorScheme = `
-    tr:nth-child(odd) { ${lightBackground} }
-    tr:hover { ${darkBackground} }
-    .query:hover { ${lightBackground} }
-    .query:active { ${darkBackground} }
-  `;
-
-  appendStyles(colorScheme);
-}
-
 function appendStyles (styleStr) {
   const styleEl = document.createElement('style');
   styleEl.appendChild( document.createTextNode(styleStr) );
   document.head.appendChild(styleEl);
 }
 
-function movePage (inc) {
-  browser.tabs.getCurrent()
-    .then((tab) =>
-      browser.runtime.sendMessage({ action: 'movePage', inc, tabId: tab.id }));
+
+function writeToNode (node, text) {
+  const textNode = document.createTextNode(text);
+  emptyNode(node);
+  node.appendChild(textNode);
 }
 
-function jumpToPage (defaultPage) {
-  const userInput = window.prompt('Go to page:', defaultPage);
+function assignListeners (obj) {
 
-  if (userInput === null) {
-    return;
+  for (let selector in obj) {
+    const listeners = obj[selector];
+
+    for (let action in listeners) {
+      document.querySelector(selector).addEventListener(action, listeners[action]);
+    }
   }
-
-  browser.tabs.getCurrent()
-    .then((tab) =>
-      browser.runtime.sendMessage({ action: 'jumpToPage', pageNum: +userInput, tabId: tab.id }));
-}
-
-function openSettings () {
-  browser.tabs.create({ active: true, url: SETTINGS_PAGE_URL });
 }
 
 function copyQuery () {
@@ -1569,10 +1804,33 @@ function copyQuery () {
   FULL_QUERY_EL.classList.add('hidden');
 }
 
-function writeToNode (node, text) {
-  const textNode = document.createTextNode(text);
-  emptyNode(node);
-  node.appendChild(textNode);
+function setSaveButton (bool) {
+  let text;
+  let operation;
+  let classToAdd;
+  let classToRemove;
+
+  if (bool) {
+    text = 'Forget query';
+    operation = 'remove';
+    classToAdd = 'red';
+    classToRemove = 'green'
+  } else {
+    text = 'Save query';
+    operation = 'save';
+    classToAdd = 'green';
+    classToRemove = 'red'
+  }
+
+  SAVE_BUTTON.classList.add(classToAdd);
+  SAVE_BUTTON.classList.remove(classToRemove);
+
+  const cb = () => {
+    const query = _state__WEBPACK_IMPORTED_MODULE_0__["default"].tabState().query;
+    _messages__WEBPACK_IMPORTED_MODULE_1__["default"][operation + 'SearchQuery'](query).then(({ saved }) => setSaveButton(saved));
+  }
+  writeToNode(SAVE_BUTTON, text);
+  SAVE_BUTTON.onclick = cb;
 }
 
 

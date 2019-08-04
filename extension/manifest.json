@@ -2,7 +2,7 @@
 
   "manifest_version": 2,
   "name": "Histocher",
-  "version": "1.0.1",
+  "version": "1.0.2",
 
   "description": "Simple and compact extension helping to search through history",
   "homepage_url": "https://github.com/ismorozs/histocher",
@@ -26,12 +26,14 @@
     "scripts": ["background-script.js"]
   },
 
-  "omnibox": {
-    "keyword": "h"
+  "browser_action": {
+    "default_icon": "icons/hs32.png",
+    "default_title": "Histocher",
+    "default_popup": "popup/index.html"
   },
 
-  "options_ui": {
-    "page": "options/options.html"
+  "omnibox": {
+    "keyword": "h"
   },
 
   "author": "Igor Morozov"

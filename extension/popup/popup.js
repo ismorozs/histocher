@@ -81,7 +81,7 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = "./src/options.js");
+/******/ 	return __webpack_require__(__webpack_require__.s = "./src/popup-script.js");
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -3741,179 +3741,6 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 
 /***/ }),
 
-/***/ "./src/background/state.js":
-/*!*********************************!*\
-  !*** ./src/background/state.js ***!
-  \*********************************/
-/*! exports provided: SETTINGS, default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "SETTINGS", function() { return SETTINGS; });
-const browser = __webpack_require__(/*! webextension-polyfill */ "./node_modules/webextension-polyfill/dist/browser-polyfill.js");
-
-const RESULTS_SAVE_KEY = 'results';
-const SEARCHES_SAVE_KEY = 'searches'
-
-const COLOR_SCHEMES = {
-  grey: '210, 210, 210',
-  green: '169, 255, 148',
-  blue: '162, 210, 254',
-  orange: '254, 208, 162',
-  pink: '255, 208, 247',
-};
-
-const DEFAULT_SETTINGS = {
-  PAGE_SIZE: 300,
-  COLOR: 'grey',
-};
-
-const STATE = {
-  tabs: {},
-};
-
-const SETTINGS = {
-  COLOR_SCHEMES,
-  DEFAULT: DEFAULT_SETTINGS,
-};
-
-/* harmony default export */ __webpack_exports__["default"] = ({
-  getTabState,
-  setTabState,
-  setPopupState,
-  loadSettings,
-  onSettingsChange,
-  saveResults,
-  removeResults,
-  initTabState,
-  removeTabState,
-  getResultsPage,
-  saveResultsPage,
-  removeResultsPage,
-  getSavedSearches,
-  saveSearch,
-  removeSearch,
-  isSearchSaved,
-});
-
-function getTabState (tabId) {
-  return STATE.tabs[ tabId ];
-}
-
-function setTabState (tabId, state) {
-  return STATE.tabs[ tabId ] = state;
-}
-
-function setPopupState (tabId, state) {
-  return STATE.tabs[ tabId ].popupOpen = state;
-}
-
-async function initTabState (tabId, results, options) {
-  return setTabState(tabId, {
-    ...options,
-    pageNum: 0,
-    totalCount: results.length,
-    totalPages: Math.ceil(results.length / SETTINGS.PAGE_SIZE),
-    tabId,
-    color: COLOR_SCHEMES[ SETTINGS.COLOR ],
-    isSaved: await isSearchSaved(options.query),
-  });
-}
-
-function loadSettings () {
-  const settings_names = Object.keys(DEFAULT_SETTINGS);
-  browser.storage.local.get(settings_names).then((savedOptions) => {
-    
-    for (let key in DEFAULT_SETTINGS) {
-      if (typeof savedOptions[key] === 'undefined') {
-        savedOptions[key] = DEFAULT_SETTINGS[key];
-        browser.storage.local.set({ [key]: savedOptions[key] });
-      }
-    }
-
-    Object.assign(SETTINGS, savedOptions);
-  });
-}
-
-function onSettingsChange (changes) {
-  for (let key in changes) {
-    if (DEFAULT_SETTINGS[key]) {
-      SETTINGS[key] = changes[key].newValue;
-    }
-  }
-}
-
-function saveResults (tabId, results, pageNum) {
-  const list = results.slice(pageNum * SETTINGS.PAGE_SIZE, pageNum * SETTINGS.PAGE_SIZE + SETTINGS.PAGE_SIZE);
-  
-  if (!list.length) {
-    return Promise.resolve(results);
-  }
-
-  return saveResultsPage(tabId, pageNum, list).then(() => saveResults(tabId, results, pageNum + 1));
-}
-
-function removeResults (tabId, pageNum, pagesLength) {
-  if (pageNum > pagesLength) {
-    return true;
-  }
-
-  return removeResultsPage(tabId, pageNum).then(() => removeResults(tabId, pageNum + 1, pagesLength));
-}
-
-function removeTabState (tabId) {
-  removeResults(tabId, 0, getTabState(tabId).totalPages || 0);
-  setTabState(tabId, undefined);
-}
-
-function getResultsPage (tabId, pageNum) {
-  const listKey = tabId + RESULTS_SAVE_KEY + pageNum;
-  return browser.storage.local.get(listKey).then((savedResults) => savedResults[listKey]);
-}
-
-function saveResultsPage (tabId, pageNum, list) {
-  return browser.storage.local.set({ [tabId + RESULTS_SAVE_KEY + pageNum]: list });
-}
-
-function removeResultsPage (tabId, pageNum) {
-  return browser.storage.local.remove(tabId + RESULTS_SAVE_KEY + pageNum);
-}
-
-function getSavedSearches () {
-  return browser.storage.local.get(SEARCHES_SAVE_KEY).then((result) => result[SEARCHES_SAVE_KEY] || []);
-}
-
-function setSavedSearches (searches) {
-  return browser.storage.local.set({ [SEARCHES_SAVE_KEY]: searches });
-}
-
-async function isSearchSaved (searchString) {
-  const allSearches = await getSavedSearches();
-  return allSearches.includes(searchString);
-} 
-
-async function saveSearch (searchString) {
-  const allSearches = await getSavedSearches();
-  
-  if (!allSearches.includes(searchString)) {
-    allSearches.unshift(searchString);
-    await setSavedSearches(allSearches);
-  }
-  
-  return allSearches;
-}
-
-async function removeSearch (searchString) {
-  const allSearches = await getSavedSearches();
-  allSearches.splice( allSearches.indexOf(searchString), 1);
-  await setSavedSearches(allSearches);
-  return allSearches;
-}
-
-
-/***/ }),
-
 /***/ "./src/common/interaction.js":
 /*!***********************************!*\
   !*** ./src/common/interaction.js ***!
@@ -4006,10 +3833,10 @@ function saveCallback (action, cb) {
 
 /***/ }),
 
-/***/ "./src/options.js":
-/*!************************!*\
-  !*** ./src/options.js ***!
-  \************************/
+/***/ "./src/popup-script.js":
+/*!*****************************!*\
+  !*** ./src/popup-script.js ***!
+  \*****************************/
 /*! no exports provided */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -4017,11 +3844,9 @@ function saveCallback (action, cb) {
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var couli__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! couli */ "./node_modules/couli/dist/couli.js");
 /* harmony import */ var couli__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(couli__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _options_ui_components_history_tag_index__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./options/ui/components/history-tag/index */ "./src/options/ui/components/history-tag/index.js");
-/* harmony import */ var _options_ui_components_search_query_index__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./options/ui/components/search-query/index */ "./src/options/ui/components/search-query/index.js");
-/* harmony import */ var _options_ui_components_options_index__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./options/ui/components/options/index */ "./src/options/ui/components/options/index.js");
-/* harmony import */ var _common_interaction__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./common/interaction */ "./src/common/interaction.js");
-/* harmony import */ var _options_reactions__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./options/reactions */ "./src/options/reactions.js");
+/* harmony import */ var _popup_ui_components_history_tag_index__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./popup/ui/components/history-tag/index */ "./src/popup/ui/components/history-tag/index.js");
+/* harmony import */ var _popup_ui_components_popup_index__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./popup/ui/components/popup/index */ "./src/popup/ui/components/popup/index.js");
+/* harmony import */ var _common_interaction__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./common/interaction */ "./src/common/interaction.js");
 const browser = __webpack_require__(/*! webextension-polyfill */ "./node_modules/webextension-polyfill/dist/browser-polyfill.js");
 
 
@@ -4030,174 +3855,116 @@ const browser = __webpack_require__(/*! webextension-polyfill */ "./node_modules
 
 
 
+window.__IS_BACKGROUND_SCRIPT__ = true;
 
+browser.runtime.onMessage.addListener((message) => Object(_common_interaction__WEBPACK_IMPORTED_MODULE_3__["onMessage"])(message));
 
-
-browser.runtime.onMessage.addListener((message) => Object(_common_interaction__WEBPACK_IMPORTED_MODULE_4__["onMessage"])(message, _options_reactions__WEBPACK_IMPORTED_MODULE_5__["default"]));
-
-const options = document.createElement('options');
-document.body.appendChild(options);
+const popup = document.createElement('history-searcher-popup');
+document.body.appendChild(popup);
 
 couli__WEBPACK_IMPORTED_MODULE_0___default.a.apply('body');
 
 
 /***/ }),
 
-/***/ "./src/options/messages.js":
-/*!*********************************!*\
-  !*** ./src/options/messages.js ***!
-  \*********************************/
+/***/ "./src/popup/messages.js":
+/*!*******************************!*\
+  !*** ./src/popup/messages.js ***!
+  \*******************************/
 /*! exports provided: default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _common_interaction__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../common/interaction */ "./src/common/interaction.js");
+/* harmony import */ var _store__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./store */ "./src/popup/store.js");
+
 
 
 /* harmony default export */ __webpack_exports__["default"] = ({
+  addNewTag,
   removeTag,
   getData,
   startSearch,
-  removeSearch,
+  openSettings,
+  openHelp,
 });
 
-function removeTag (tag) {
-  return Object(_common_interaction__WEBPACK_IMPORTED_MODULE_0__["sendMessageToBackground"])('removeTag', { tag });
+function addNewTag (tag) {
+  return Object(_common_interaction__WEBPACK_IMPORTED_MODULE_0__["sendMessageFromBackground"])('addTagToPage', { tag });
 }
 
-function getData (tabId) {
-  return Object(_common_interaction__WEBPACK_IMPORTED_MODULE_0__["sendMessageToBackground"])('getData', { tabId });
+function removeTag (tag) {
+  return Object(_common_interaction__WEBPACK_IMPORTED_MODULE_0__["sendMessageFromBackground"])('removeTagFromPage', { tag });
+}
+
+function getData () {
+  return Object(_common_interaction__WEBPACK_IMPORTED_MODULE_0__["sendMessageFromBackground"])('getData').then(_store__WEBPACK_IMPORTED_MODULE_1__["default"].saveTagData);
 }
 
 function startSearch (query) {
-  return Object(_common_interaction__WEBPACK_IMPORTED_MODULE_0__["sendMessageToBackground"])('startSearch', { query });
+  return Object(_common_interaction__WEBPACK_IMPORTED_MODULE_0__["sendMessageFromBackground"])('startSearch', { query });
 }
 
-function removeSearch (query) {
-  return Object(_common_interaction__WEBPACK_IMPORTED_MODULE_0__["sendMessageToBackground"])('removeSearchQuery', { query });
+function openSettings () {
+  Object(_common_interaction__WEBPACK_IMPORTED_MODULE_0__["sendMessageFromBackground"])('openSettings', {});
 }
 
-
-/***/ }),
-
-/***/ "./src/options/reactions.js":
-/*!**********************************!*\
-  !*** ./src/options/reactions.js ***!
-  \**********************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _store__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./store */ "./src/options/store.js");
-
-
-/* harmony default export */ __webpack_exports__["default"] = ({
-  getData
-});
-
-function getData (data) {
-  _store__WEBPACK_IMPORTED_MODULE_0__["default"].saveData(data);
+function openHelp () {
+  Object(_common_interaction__WEBPACK_IMPORTED_MODULE_0__["sendMessageFromBackground"])('openHelp', {});
 }
 
 
 /***/ }),
 
-/***/ "./src/options/store.js":
-/*!******************************!*\
-  !*** ./src/options/store.js ***!
-  \******************************/
+/***/ "./src/popup/store.js":
+/*!****************************!*\
+  !*** ./src/popup/store.js ***!
+  \****************************/
 /*! exports provided: default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _background_state__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../background/state */ "./src/background/state.js");
-/* harmony import */ var _messages__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./messages */ "./src/options/messages.js");
-const browser = __webpack_require__(/*! webextension-polyfill */ "./node_modules/webextension-polyfill/dist/browser-polyfill.js");
+/* harmony import */ var _messages__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./messages */ "./src/popup/messages.js");
 
 
-
+const ADD_TAG_SUGGESTION = 'Add tag from existing';
 
 const LISTENERS = [];
 
 const STATE = {
-  tabId: null,
   allExistingTags: [],
-  PAGE_SIZE: 0,
-  color: '',
-  colorSchemes: [],
-  savedSearches: [],
+  assignedTags: [],
+  newTagInput: '',
 };
 
 const store = {
   getState,
-  saveSettings,
-  resetToDefaults,
-  updateForm,
-  loadData,
   addListener,
-  runListeners,
+  addNewTag,
   removeTag,
+  saveTagData,
   handleInput,
-  removeTag,
-  saveData,
+  getData,
   startSearch,
-  removeSearch,
+  openSettings,
+  openHelp,
 };
 
 /* harmony default export */ __webpack_exports__["default"] = (store);
 
-const FIELDS = {
-  PAGE_SIZE: { validate: (val) => +val },
-  COLOR: { validate: (val) => val }
-};
-
-async function loadData () {
-  const settingsKeys = Object.keys(FIELDS);
-  const savedSettings = await browser.storage.local.get(settingsKeys);
-
-  for (let key in savedSettings) {
-    FIELDS[key].default = _background_state__WEBPACK_IMPORTED_MODULE_0__["SETTINGS"].DEFAULT[key];
-    STATE[key] = savedSettings[key] || _background_state__WEBPACK_IMPORTED_MODULE_0__["SETTINGS"].DEFAULT[key];
-  }
-
-  await _messages__WEBPACK_IMPORTED_MODULE_1__["default"].getData().then(saveData);
-}
-
 function getState () {
   return {
-    allExistingTags: STATE.allExistingTags.map((tag) => ({ name: tag })),
-    pageSize: STATE.PAGE_SIZE,
-    selectedColor: STATE.COLOR,
-    colorSchemes: Object.keys(_background_state__WEBPACK_IMPORTED_MODULE_0__["SETTINGS"].COLOR_SCHEMES).map((color) => ({ option: color })),
-    savedSearches: STATE.savedSearches.map((query) => ({ query })),
+    selected: ADD_TAG_SUGGESTION,
+    newTagInput: STATE.newTagInput,
+    allExistingTags: [{ option: ADD_TAG_SUGGESTION }].concat( STATE.allExistingTags.map((tag) => ({ option: tag })) ),
+    assignedTags: STATE.assignedTags.map((tag) => ({ name: tag }))
   }
 }
 
-function updateForm (value, name) {
-  STATE[name] = value;
-  runListeners();
-}
-
-function saveSettings () {
-  const NEW_SETTINGS = {};
-
-  for (let key in FIELDS) {
-    const newValue = FIELDS[key].validate( STATE[key] ) || FIELDS[key].default;
-    NEW_SETTINGS[key] = newValue;
-  }
-
-  Object.assign(STATE, NEW_SETTINGS);
-  browser.storage.local.set(NEW_SETTINGS);
-  runListeners();
-}
-
-function resetToDefaults () {
-  Object.assign(STATE, _background_state__WEBPACK_IMPORTED_MODULE_0__["SETTINGS"].DEFAULT);
-  browser.storage.local.set(_background_state__WEBPACK_IMPORTED_MODULE_0__["SETTINGS"].DEFAULT);
-  runListeners();
+function getData () {
+  _messages__WEBPACK_IMPORTED_MODULE_0__["default"].getData();
 }
 
 function addListener (fn) {
@@ -4209,18 +3976,30 @@ function runListeners () {
   return Promise.resolve();
 }
 
-async function removeTag (tag) {
-  _messages__WEBPACK_IMPORTED_MODULE_1__["default"].removeTag(tag).then(saveData)
+function addNewTag (tag) {
+  tag = tag || STATE.newTagInput;
+  const handledTag = toCamelCase(tag);
+
+  if (!handledTag) {
+    return;
+  }
+
+  _messages__WEBPACK_IMPORTED_MODULE_0__["default"].addNewTag(handledTag).then(saveTagData);
 }
 
+function removeTag (tag) {
+  _messages__WEBPACK_IMPORTED_MODULE_0__["default"].removeTag(tag).then(saveTagData);
+}
 
-function saveData ({ allExistingTags, savedSearches }) {
+function saveTagData ({ allExistingTags, assignedTags }) {
+  STATE.newTagInput = '';
+
   if (allExistingTags) {
     Object.assign(STATE, { allExistingTags });
   }
 
-  if (savedSearches) {
-    Object.assign(STATE, { savedSearches });
+  if (assignedTags) {
+    Object.assign(STATE, { assignedTags });
   }
 
   runListeners();
@@ -4231,21 +4010,43 @@ function handleInput (str) {
   runListeners();
 }
 
-function startSearch (query) {
-  _messages__WEBPACK_IMPORTED_MODULE_1__["default"].startSearch(query);
+function toCamelCase (str) {
+  if (!str) {
+    return;
+  }
+
+  const words = str.split(' ');
+
+  if (words.length === 1) {
+    return str;
+  }
+
+  return words.map((word) => word.trim())
+    .map((word, i) => {
+      const firstLetter = i ? word[0].toUpperCase() : word[0];
+      return firstLetter + word.slice(1)
+    }).join('');
 }
 
-function removeSearch (string) {
-  return _messages__WEBPACK_IMPORTED_MODULE_1__["default"].removeSearch(string).then(saveData);
+function startSearch (query) {
+  _messages__WEBPACK_IMPORTED_MODULE_0__["default"].startSearch(query);
+}
+
+function openSettings () {
+  _messages__WEBPACK_IMPORTED_MODULE_0__["default"].openSettings();
+}
+
+function openHelp () {
+  _messages__WEBPACK_IMPORTED_MODULE_0__["default"].openHelp();
 }
 
 
 /***/ }),
 
-/***/ "./src/options/ui/components/history-tag/index.js":
-/*!********************************************************!*\
-  !*** ./src/options/ui/components/history-tag/index.js ***!
-  \********************************************************/
+/***/ "./src/popup/ui/components/history-tag/index.js":
+/*!******************************************************!*\
+  !*** ./src/popup/ui/components/history-tag/index.js ***!
+  \******************************************************/
 /*! no exports provided */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -4253,8 +4054,8 @@ function removeSearch (string) {
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var couli__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! couli */ "./node_modules/couli/dist/couli.js");
 /* harmony import */ var couli__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(couli__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _store__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../../store */ "./src/options/store.js");
-/* harmony import */ var _styles__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./styles */ "./src/options/ui/components/history-tag/styles.js");
+/* harmony import */ var _store__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../../store */ "./src/popup/store.js");
+/* harmony import */ var _styles__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./styles */ "./src/popup/ui/components/history-tag/styles.js");
 
 
 
@@ -4284,10 +4085,10 @@ couli__WEBPACK_IMPORTED_MODULE_0___default.a.define('history-tag', `
 
 /***/ }),
 
-/***/ "./src/options/ui/components/history-tag/styles.js":
-/*!*********************************************************!*\
-  !*** ./src/options/ui/components/history-tag/styles.js ***!
-  \*********************************************************/
+/***/ "./src/popup/ui/components/history-tag/styles.js":
+/*!*******************************************************!*\
+  !*** ./src/popup/ui/components/history-tag/styles.js ***!
+  \*******************************************************/
 /*! exports provided: default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -4305,7 +4106,7 @@ __webpack_require__.r(__webpack_exports__);
     paddingRight: 31,
     marginBottom: 9,
     marginRight: 9,
-    fontSize: 14,
+    fontSize: 16,
   },
 
   name: {
@@ -4351,10 +4152,10 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ }),
 
-/***/ "./src/options/ui/components/options/index.js":
-/*!****************************************************!*\
-  !*** ./src/options/ui/components/options/index.js ***!
-  \****************************************************/
+/***/ "./src/popup/ui/components/popup/index.js":
+/*!************************************************!*\
+  !*** ./src/popup/ui/components/popup/index.js ***!
+  \************************************************/
 /*! no exports provided */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -4362,51 +4163,97 @@ __webpack_require__.r(__webpack_exports__);
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var couli__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! couli */ "./node_modules/couli/dist/couli.js");
 /* harmony import */ var couli__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(couli__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _styles__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./styles */ "./src/options/ui/components/options/styles.js");
-/* harmony import */ var _store__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../store */ "./src/options/store.js");
-/* harmony import */ var _markup_html__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./markup.html */ "./src/options/ui/components/options/markup.html");
-/* harmony import */ var _markup_html__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(_markup_html__WEBPACK_IMPORTED_MODULE_3__);
+/* harmony import */ var _styles__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./styles */ "./src/popup/ui/components/popup/styles.js");
+/* harmony import */ var _store__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../store */ "./src/popup/store.js");
 
 
 
 
+const INITIAL_POPUP_POSITION = { top: 20, left: 'auto', right: 20 };
 
-couli__WEBPACK_IMPORTED_MODULE_0___default.a.define('options', _markup_html__WEBPACK_IMPORTED_MODULE_3___default.a, {
+couli__WEBPACK_IMPORTED_MODULE_0___default.a.define('history-searcher-popup',
+  `<div>
+    <div x-b="content">
+      <div x-lb="assignedTags" class="hidden">
+        <history-tag>
+      </div>
+      <div class="field">
+        <input x-b="newTagInput" /> <button x-b="addTagButton">Add tag</button>
+      </div>
+      <div class="field">
+        <select x-lb="allExistingTags">
+          <option x-b="option">
+        </select>
+      </div>
+      <button x-b="helpButton" class="link">Help</button>
+      <button x-b="controlsButton" class="link">Controls</button>
+    </div>
+  </div>`, {
 
-  selectedColor: {},
+  selected: {},
 
-  pageSize: { events: { keyup: (e) => _store__WEBPACK_IMPORTED_MODULE_2__["default"].updateForm(e.target.value, 'PAGE_SIZE') } },
+  newTagInput: {
+    events: {
+      keyup: (e) => {
+        e.stopPropagation();
+        if (e.keyCode === 13) {
+          _store__WEBPACK_IMPORTED_MODULE_2__["default"].addNewTag(e.target.value);
+          return;
+        }
 
-  colorSchemes: {
-    events: { change: (e) => _store__WEBPACK_IMPORTED_MODULE_2__["default"].updateForm(e.target.value, 'COLOR') },
-
-    attrs: ($) => ({ value: $.selectedColor })
+        _store__WEBPACK_IMPORTED_MODULE_2__["default"].handleInput(e.target.value);
+      }
+    }
   },
 
-  saveButton: { events: { click: (e) => _store__WEBPACK_IMPORTED_MODULE_2__["default"].saveSettings() } },
-  defaultsButton: { events: { click: (e) => _store__WEBPACK_IMPORTED_MODULE_2__["default"].resetToDefaults() } },
+  addTagButton: {
+    events: {
+      click: () => _store__WEBPACK_IMPORTED_MODULE_2__["default"].addNewTag(),
+    }
+  },
+
+  allExistingTags: {
+
+    events: {
+      change: (e, el, ci) => {
+        if (e.target.value) {
+          _store__WEBPACK_IMPORTED_MODULE_2__["default"].addNewTag(e.target.value);
+          ci.set({ selected: e.target.value });
+        }
+      }
+    },
+
+    attrs: ($) => ({ value: $.selected }),
+  },
+
+  controlsButton: {
+    events: {
+      click: () => _store__WEBPACK_IMPORTED_MODULE_2__["default"].openSettings(),
+    }
+  },
+
+  helpButton: {
+    events: {
+      click: () => _store__WEBPACK_IMPORTED_MODULE_2__["default"].openHelp(),
+    }
+  },
 
   '': {
     hooks: {
       mount: (el, data, ci) => {
-        ci.set(_store__WEBPACK_IMPORTED_MODULE_2__["default"].getState());
 
         _store__WEBPACK_IMPORTED_MODULE_2__["default"].addListener((store) => {
           const state = store.getState();
-          ci.markup('colorSchemes').value = state.selectedColor;
+          switchElementVisibility(ci.markup('assignedTags'), state.assignedTags.length);
 
-          switchElementVisibility(ci.markup('tagsPanel'), state.allExistingTags.length);
-          switchElementVisibility(ci.markup('searchesPanel'), state.savedSearches.length);
-          
           ci.set(state);
         });
 
-        _store__WEBPACK_IMPORTED_MODULE_2__["default"].loadData();
+        _store__WEBPACK_IMPORTED_MODULE_2__["default"].getData()
       }
     }
   }
-
-}, _styles__WEBPACK_IMPORTED_MODULE_1__["default"]);
+}, Object(_styles__WEBPACK_IMPORTED_MODULE_1__["default"])({ INITIAL_POPUP_POSITION }));
 
 function switchElementVisibility (el, bool) {
   bool ? el.classList.remove('hidden') : el.classList.add('hidden')
@@ -4415,178 +4262,109 @@ function switchElementVisibility (el, bool) {
 
 /***/ }),
 
-/***/ "./src/options/ui/components/options/markup.html":
-/*!*******************************************************!*\
-  !*** ./src/options/ui/components/options/markup.html ***!
-  \*******************************************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-module.exports = "<div>\r\n  <div class=\"floatLeft settingsPanel\">\r\n    <h3>Settings</h3>\r\n    <form class=\"form\">\r\n      <table>\r\n        <tbody>\r\n          <tr>\r\n            <td class=\"option-name\">Page size</td>\r\n            <td><input type='number' x-b=\"pageSize\" /></td>\r\n          </tr>\r\n          <tr>\r\n            <td class=\"option-name\">Color scheme</td>\r\n            <td>\r\n              <select x-lb=\"colorSchemes\" />\r\n                <option x-b=\"option\">\r\n              </select>\r\n            </td>\r\n          </tr>\r\n        </tbody>\r\n      </table>\r\n    </form>\r\n    <button x-b=\"saveButton\">Save</button>\r\n    <button x-b=\"defaultsButton\">Defaults</button>\r\n  </div>\r\n  <div x-b=\"tagsPanel\" class=\"hidden floatLeft\">\r\n    <h3>Tags</h3>\r\n    <div x-lb=\"allExistingTags\">\r\n      <history-tag>\r\n    </div>\r\n  </div>\r\n  <div x-b=\"searchesPanel\" class=\"hidden\">\r\n    <h3>Saved queries</h3>\r\n    <ul x-lb=\"savedSearches\">\r\n      <search-query>\r\n    </ul>\r\n  </div>\r\n</div>\r\n";
-
-/***/ }),
-
-/***/ "./src/options/ui/components/options/styles.js":
-/*!*****************************************************!*\
-  !*** ./src/options/ui/components/options/styles.js ***!
-  \*****************************************************/
+/***/ "./src/popup/ui/components/popup/styles.js":
+/*!*************************************************!*\
+  !*** ./src/popup/ui/components/popup/styles.js ***!
+  \*************************************************/
 /*! exports provided: default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony default export */ __webpack_exports__["default"] = ({
+/* harmony default export */ __webpack_exports__["default"] = ((vars) => ({
   '': {
-    paddingLeft: 30,
+    width: 300,
+    background: 'white',
+    border: '3px solid black',
+    zIndex: '2147483647',
+    boxSizing: 'border-box',
+    padding: 0,
     fontSize: 14,
+    fontFamily: 'sans-serif',
+    lineHeight: 'normal',
+    color: '#222',
     overflow: 'auto',
+    ...vars.INITIAL_POPUP_POSITION
   },
 
-  'h3': {
-    fontSize: 20,
-    marginTop: 33,
+  content: {
+    padding: 10,
   },
 
-  '.hidden': {
-    display: 'none'
-  },
-
-  '.floatLeft': {
-    float: 'left',
-  },
-  
-  table: {
-    width: 324,
-    borderCollapse: 'collapse',
-    marginBottom: 20,
-  },
-  
-  'table, th, td': {
-    padding: '8px 14px',
-  },
-  
-  '.option-name': {
-    textAlign: 'right',
-  },
-
-  '.settingsPanel': {
-    paddingRight: 20,
-  },
-  
-  '.settingsPanel button': {
-    display: 'inline-block',
-    textAlign: 'center',
-    fontSize: 15,
-    padding: '5px 10px',
-    width: 110,
-  },
-  
-  defaultButton: {
-    marginTop: 10,
-    width: 80,
-  },
-  
-  br: {
-    marginBottom: 5,
-  },
-
-  tagsPanel: {
-    width: 670,
-  },
-
-  allExistingTags: {
+  '.field': {
     display: 'flex',
-    flexWrap: 'wrap',
   },
 
-  'allExistingTags > div:hover': {
+  '.header': {
+    fontSize: 15,
+    marginTop: 5,
+    marginBottom: 10,
+    fontWeight: '700',
+    height: 20,
+  },
+
+  newTagInput: {
+    flex: 'auto',
+    borderWidth: 0,
+    borderBottom: '2px solid black',
+    paddingTop: 2,
+    marginRight: 7,
+    fontSize: 15,
+  },
+
+  'newTagInput:focus': {
+    borderColor: 'rgb(114, 123, 243)',
+    outline: 'none'
+  },
+
+  button: {
+    background: 'none',
+    fontSize: 15,
+    lineHeight: '1.5',
+    color: 'black',
+    border: '2px solid black',
+  },
+
+  'button:hover': {
     borderColor: 'rgb(114, 123, 243)',
     backgroundColor: 'transparent',
     color: '#2a39fa',
   },
 
-  searchesPanel: {
-    clear: 'both',
-    paddingTop: 1,
-    fontSize: 18,
-  },
-
-  savedSearches: {
-    listStyle: 'none',
-    padding: 0,
-  }
-});
-
-
-/***/ }),
-
-/***/ "./src/options/ui/components/search-query/index.js":
-/*!*********************************************************!*\
-  !*** ./src/options/ui/components/search-query/index.js ***!
-  \*********************************************************/
-/*! no exports provided */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony import */ var couli__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! couli */ "./node_modules/couli/dist/couli.js");
-/* harmony import */ var couli__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(couli__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _store__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../../store */ "./src/options/store.js");
-/* harmony import */ var _styles__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./styles */ "./src/options/ui/components/search-query/styles.js");
-
-
-
-
-
-couli__WEBPACK_IMPORTED_MODULE_0___default.a.define('search-query', `
-  <li>
-    <button x-b="query"></button>
-    <button x-b="removeButton">Remove</button>
-  <li>
-`, {
-
-  query: { events: { click: (e, el, ci) => _store__WEBPACK_IMPORTED_MODULE_1__["default"].startSearch( ci.get('query') ) } },
-  removeButton: { events: { click: (e, el, ci) => _store__WEBPACK_IMPORTED_MODULE_1__["default"].removeSearch( ci.get('query') ) } }
-
-}, _styles__WEBPACK_IMPORTED_MODULE_2__["default"]);
-
-
-/***/ }),
-
-/***/ "./src/options/ui/components/search-query/styles.js":
-/*!**********************************************************!*\
-  !*** ./src/options/ui/components/search-query/styles.js ***!
-  \**********************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony default export */ __webpack_exports__["default"] = ({
-
-  '': {
+  allExistingTags: {
     marginTop: 13,
+    width: '100%',
+    background: 'none',
+    border: '1px solid black',
   },
-  
-  query: {
+
+  'option:first-child': {
+    display: 'none',
+  },
+
+  assignedTags: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    marginBottom: 15,
+    paddingBottom: 3,
+    borderBottom: '1px solid black',
+  },
+
+  'assignedTags > div:hover': {
+    borderColor: 'rgb(114, 123, 243)',
+    backgroundColor: 'transparent',
+    color: '#2a39fa',
+  },
+
+  '.link': {
+    marginTop: 13,
+    marginBottom: 10,
+    marginLeft: 5,
+    float: 'right',
     cursor: 'pointer',
-    borderTop: 'none',
-    borderLeft: 'none',
-    borderRight: 'none',
-    fontSize: 16,
-    marginRight: 10,
-  },
-
-  removeButton: {
-    cursor: 'pointer'
-  },
-
-  'removeButton:hover': {
-    borderColor: '#dc0000',
-    color: '#dc0000',
   }
 
-});
+}));
 
 
 /***/ })

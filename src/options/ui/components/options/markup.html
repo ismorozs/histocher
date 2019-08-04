@@ -1,0 +1,37 @@
+<div>
+  <div class="floatLeft settingsPanel">
+    <h3>Settings</h3>
+    <form class="form">
+      <table>
+        <tbody>
+          <tr>
+            <td class="option-name">Page size</td>
+            <td><input type='number' x-b="pageSize" /></td>
+          </tr>
+          <tr>
+            <td class="option-name">Color scheme</td>
+            <td>
+              <select x-lb="colorSchemes" />
+                <option x-b="option">
+              </select>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </form>
+    <button x-b="saveButton">Save</button>
+    <button x-b="defaultsButton">Defaults</button>
+  </div>
+  <div x-b="tagsPanel" class="hidden floatLeft">
+    <h3>Tags</h3>
+    <div x-lb="allExistingTags">
+      <history-tag>
+    </div>
+  </div>
+  <div x-b="searchesPanel" class="hidden">
+    <h3>Saved queries</h3>
+    <ul x-lb="savedSearches">
+      <search-query>
+    </ul>
+  </div>
+</div>
