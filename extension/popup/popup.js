@@ -3741,6 +3741,26 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 
 /***/ }),
 
+/***/ "./src/common/constants.js":
+/*!*********************************!*\
+  !*** ./src/common/constants.js ***!
+  \*********************************/
+/*! exports provided: SUGGESTIONS */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "SUGGESTIONS", function() { return SUGGESTIONS; });
+const SUGGESTIONS = {
+  PREFIX: 'Histocher - ',
+  DEFAULT: 'Search history with query',
+  SETTINGS: 'Controls',
+  HELP: 'How to Use'
+};
+
+
+/***/ }),
+
 /***/ "./src/common/interaction.js":
 /*!***********************************!*\
   !*** ./src/common/interaction.js ***!
@@ -4165,6 +4185,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var couli__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(couli__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _styles__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./styles */ "./src/popup/ui/components/popup/styles.js");
 /* harmony import */ var _store__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../store */ "./src/popup/store.js");
+/* harmony import */ var _common_constants__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../../../common/constants */ "./src/common/constants.js");
+
 
 
 
@@ -4185,8 +4207,8 @@ couli__WEBPACK_IMPORTED_MODULE_0___default.a.define('history-searcher-popup',
           <option x-b="option">
         </select>
       </div>
-      <button x-b="helpButton" class="link">Help</button>
-      <button x-b="controlsButton" class="link">Controls</button>
+      <button x-b="helpButton" class="link">${_common_constants__WEBPACK_IMPORTED_MODULE_3__["SUGGESTIONS"].HELP}</button>
+      <button x-b="controlsButton" class="link">${_common_constants__WEBPACK_IMPORTED_MODULE_3__["SUGGESTIONS"].SETTINGS}</button>
     </div>
   </div>`, {
 

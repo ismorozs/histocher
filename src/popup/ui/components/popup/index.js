@@ -1,6 +1,7 @@
 import Couli from 'couli';
 import styles from './styles';
 import Store from '../../../store';
+import { SUGGESTIONS } from '../../../../common/constants';
 
 const INITIAL_POPUP_POSITION = { top: 20, left: 'auto', right: 20 };
 
@@ -18,8 +19,8 @@ Couli.define('history-searcher-popup',
           <option x-b="option">
         </select>
       </div>
-      <button x-b="helpButton" class="link">Help</button>
-      <button x-b="controlsButton" class="link">Controls</button>
+      <button x-b="helpButton" class="link">${SUGGESTIONS.HELP}</button>
+      <button x-b="controlsButton" class="link">${SUGGESTIONS.SETTINGS}</button>
     </div>
   </div>`, {
 

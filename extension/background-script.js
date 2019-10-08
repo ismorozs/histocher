@@ -1289,10 +1289,12 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _common_interaction__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./common/interaction */ "./src/common/interaction.js");
-/* harmony import */ var _background_reactions__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./background/reactions */ "./src/background/reactions.js");
-/* harmony import */ var _background_messages__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./background/messages */ "./src/background/messages.js");
-/* harmony import */ var _background_state__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./background/state */ "./src/background/state.js");
+/* harmony import */ var _common_constants__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./common/constants */ "./src/common/constants.js");
+/* harmony import */ var _background_reactions__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./background/reactions */ "./src/background/reactions.js");
+/* harmony import */ var _background_messages__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./background/messages */ "./src/background/messages.js");
+/* harmony import */ var _background_state__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./background/state */ "./src/background/state.js");
 const browser = __webpack_require__(/*! webextension-polyfill */ "./node_modules/webextension-polyfill/dist/browser-polyfill.js");
+
 
 
 
@@ -1303,14 +1305,16 @@ const FAVICON_SAVE_KEY = 'favicon';
 
 window.__IS_BACKGROUND_SCRIPT__ = true;
 
-browser.omnibox.onInputEntered.addListener((query) => _background_reactions__WEBPACK_IMPORTED_MODULE_1__["default"].startSearch({ query }));
-browser.runtime.onMessage.addListener((message) => Object(_common_interaction__WEBPACK_IMPORTED_MODULE_0__["onMessage"])(message, _background_reactions__WEBPACK_IMPORTED_MODULE_1__["default"]));
-browser.storage.onChanged.addListener(_background_state__WEBPACK_IMPORTED_MODULE_3__["default"].onSettingsChange);
+browser.omnibox.setDefaultSuggestion({ description: _common_constants__WEBPACK_IMPORTED_MODULE_1__["SUGGESTIONS"].PREFIX + _common_constants__WEBPACK_IMPORTED_MODULE_1__["SUGGESTIONS"].DEFAULT });
+browser.omnibox.onInputEntered.addListener(onInputEntered);
+browser.omnibox.onInputChanged.addListener(onInputChanged);
+browser.runtime.onMessage.addListener((message) => Object(_common_interaction__WEBPACK_IMPORTED_MODULE_0__["onMessage"])(message, _background_reactions__WEBPACK_IMPORTED_MODULE_2__["default"]));
+browser.storage.onChanged.addListener(_background_state__WEBPACK_IMPORTED_MODULE_4__["default"].onSettingsChange);
 browser.tabs.onActivated.addListener(onTabActivated);
 browser.tabs.onRemoved.addListener(onTabRemoved);
 browser.tabs.onUpdated.addListener(onFaviconUpdated);
 
-_background_state__WEBPACK_IMPORTED_MODULE_3__["default"].loadSettings();
+_background_state__WEBPACK_IMPORTED_MODULE_4__["default"].loadSettings();
 
 function onFaviconUpdated (tabId, changedInfo, tab) {
   const origin = tab.url.split('/').slice(0, 3).join('/')
@@ -1318,14 +1322,36 @@ function onFaviconUpdated (tabId, changedInfo, tab) {
 }
 
 function onTabActivated ({ tabId }) {
-  if (_background_state__WEBPACK_IMPORTED_MODULE_3__["default"].getTabState(tabId)) {
-    _background_messages__WEBPACK_IMPORTED_MODULE_2__["default"].sendTagData({ tabId });
+  if (_background_state__WEBPACK_IMPORTED_MODULE_4__["default"].getTabState(tabId)) {
+    _background_messages__WEBPACK_IMPORTED_MODULE_3__["default"].sendTagData({ tabId });
   }
 }
 
 function onTabRemoved (tabId) {
-  if (_background_state__WEBPACK_IMPORTED_MODULE_3__["default"].getTabState(tabId)) {
-    _background_state__WEBPACK_IMPORTED_MODULE_3__["default"].removeTabState(tabId);
+  if (_background_state__WEBPACK_IMPORTED_MODULE_4__["default"].getTabState(tabId)) {
+    _background_state__WEBPACK_IMPORTED_MODULE_4__["default"].removeTabState(tabId);
+  }
+}
+
+function onInputChanged (query, addSuggestions) {
+  addSuggestions([
+    { description: _common_constants__WEBPACK_IMPORTED_MODULE_1__["SUGGESTIONS"].PREFIX + _common_constants__WEBPACK_IMPORTED_MODULE_1__["SUGGESTIONS"].SETTINGS, content: _common_constants__WEBPACK_IMPORTED_MODULE_1__["SUGGESTIONS"].SETTINGS },
+    { description: _common_constants__WEBPACK_IMPORTED_MODULE_1__["SUGGESTIONS"].PREFIX + _common_constants__WEBPACK_IMPORTED_MODULE_1__["SUGGESTIONS"].HELP, content: _common_constants__WEBPACK_IMPORTED_MODULE_1__["SUGGESTIONS"].HELP },
+  ]);
+}
+
+function onInputEntered (query) {
+  switch (query) {
+    case _common_constants__WEBPACK_IMPORTED_MODULE_1__["SUGGESTIONS"].SETTINGS:
+      _background_reactions__WEBPACK_IMPORTED_MODULE_2__["default"].openSettings();
+      break;
+
+    case _common_constants__WEBPACK_IMPORTED_MODULE_1__["SUGGESTIONS"].HELP:
+      _background_reactions__WEBPACK_IMPORTED_MODULE_2__["default"].openHelp();
+      break;
+
+    default:
+      _background_reactions__WEBPACK_IMPORTED_MODULE_2__["default"].startSearch({ query });
   }
 }
 
@@ -2282,6 +2308,26 @@ async function removeTag (tag) {
   browser.storage.local.remove(TAG_KEY_PREFIX + tag);
   return setAllTags(allTags);
 }
+
+
+/***/ }),
+
+/***/ "./src/common/constants.js":
+/*!*********************************!*\
+  !*** ./src/common/constants.js ***!
+  \*********************************/
+/*! exports provided: SUGGESTIONS */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "SUGGESTIONS", function() { return SUGGESTIONS; });
+const SUGGESTIONS = {
+  PREFIX: 'Histocher - ',
+  DEFAULT: 'Search history with query',
+  SETTINGS: 'Controls',
+  HELP: 'How to Use'
+};
 
 
 /***/ }),

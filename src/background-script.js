@@ -1,6 +1,7 @@
 const browser = require('webextension-polyfill');
 
 import { onMessage } from './common/interaction';
+import { SUGGESTIONS } from './common/constants';
 import reactions from './background/reactions';
 import Message from './background/messages';
 import State from './background/state';
@@ -9,7 +10,9 @@ const FAVICON_SAVE_KEY = 'favicon';
 
 window.__IS_BACKGROUND_SCRIPT__ = true;
 
-browser.omnibox.onInputEntered.addListener((query) => reactions.startSearch({ query }));
+browser.omnibox.setDefaultSuggestion({ description: SUGGESTIONS.PREFIX + SUGGESTIONS.DEFAULT });
+browser.omnibox.onInputEntered.addListener(onInputEntered);
+browser.omnibox.onInputChanged.addListener(onInputChanged);
 browser.runtime.onMessage.addListener((message) => onMessage(message, reactions));
 browser.storage.onChanged.addListener(State.onSettingsChange);
 browser.tabs.onActivated.addListener(onTabActivated);
@@ -32,5 +35,27 @@ function onTabActivated ({ tabId }) {
 function onTabRemoved (tabId) {
   if (State.getTabState(tabId)) {
     State.removeTabState(tabId);
+  }
+}
+
+function onInputChanged (query, addSuggestions) {
+  addSuggestions([
+    { description: SUGGESTIONS.PREFIX + SUGGESTIONS.SETTINGS, content: SUGGESTIONS.SETTINGS },
+    { description: SUGGESTIONS.PREFIX + SUGGESTIONS.HELP, content: SUGGESTIONS.HELP },
+  ]);
+}
+
+function onInputEntered (query) {
+  switch (query) {
+    case SUGGESTIONS.SETTINGS:
+      reactions.openSettings();
+      break;
+
+    case SUGGESTIONS.HELP:
+      reactions.openHelp();
+      break;
+
+    default:
+      reactions.startSearch({ query });
   }
 }
