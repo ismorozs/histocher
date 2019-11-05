@@ -6,8 +6,7 @@ export default {
   removeTag,
   getData,
   startSearch,
-  openSettings,
-  openHelp,
+  openPage,
 };
 
 function addNewTag (tag) {
@@ -19,17 +18,13 @@ function removeTag (tag) {
 }
 
 function getData () {
-  return sendMessageFromBackground('getData').then(Store.saveTagData);
+  return sendMessageFromBackground('getData', { forPopup: true }).then(Store.savePageData);
 }
 
 function startSearch (query) {
   return sendMessageFromBackground('startSearch', { query });
 }
 
-function openSettings () {
-  sendMessageFromBackground('openSettings', {});
-}
-
-function openHelp () {
-  sendMessageFromBackground('openHelp', {});
+function openPage (url) {
+  sendMessageFromBackground('openPage', { url });
 }

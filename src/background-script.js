@@ -48,11 +48,11 @@ function onInputChanged (query, addSuggestions) {
 function onInputEntered (query) {
   switch (query) {
     case SUGGESTIONS.SETTINGS:
-      reactions.openSettings();
+      reactions.openPage({ url: 'settings' });
       break;
 
     case SUGGESTIONS.HELP:
-      reactions.openHelp();
+      reactions.openPage({ url: 'help' });
       break;
 
     default:

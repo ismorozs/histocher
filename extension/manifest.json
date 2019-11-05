@@ -2,7 +2,7 @@
 
   "manifest_version": 2,
   "name": "Histocher",
-  "version": "1.0.3",
+  "version": "1.0.4",
 
   "description": "Simple and compact extension helping to search through history",
   "homepage_url": "https://github.com/ismorozs/histocher",

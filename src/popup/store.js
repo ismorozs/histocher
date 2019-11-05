@@ -7,7 +7,9 @@ const LISTENERS = [];
 const STATE = {
   allExistingTags: [],
   assignedTags: [],
+  recentlyVisitedPages: [],
   newTagInput: '',
+  tagPanelShown: false,
 };
 
 const store = {
@@ -15,22 +17,26 @@ const store = {
   addListener,
   addNewTag,
   removeTag,
-  saveTagData,
+  savePageData,
   handleInput,
   getData,
   startSearch,
-  openSettings,
-  openHelp,
+  openPage,
+  switchTagPanel,
 };
+
+const SERVER_RETURN_KEYS = ['allExistingTags', 'assignedTags', 'recentlyVisitedPages', 'favIconUrl']
 
 export default store;
 
 function getState () {
   return {
+    tagPanelShown: STATE.tagPanelShown,
     selected: ADD_TAG_SUGGESTION,
     newTagInput: STATE.newTagInput,
     allExistingTags: [{ option: ADD_TAG_SUGGESTION }].concat( STATE.allExistingTags.map((tag) => ({ option: tag })) ),
-    assignedTags: STATE.assignedTags.map((tag) => ({ name: tag }))
+    assignedTags: STATE.assignedTags.map((tag) => ({ name: tag })),
+    recentlyVisitedPages: STATE.recentlyVisitedPages.map((page) => ({ title: page.title, url: page.url, icon: STATE.favIconUrl }))
   }
 }
 
@@ -55,23 +61,21 @@ function addNewTag (tag) {
     return;
   }
 
-  Message.addNewTag(handledTag).then(saveTagData);
+  Message.addNewTag(handledTag).then(savePageData);
 }
 
 function removeTag (tag) {
-  Message.removeTag(tag).then(saveTagData);
+  Message.removeTag(tag).then(savePageData);
 }
 
-function saveTagData ({ allExistingTags, assignedTags }) {
+function savePageData (data) {
   STATE.newTagInput = '';
 
-  if (allExistingTags) {
-    Object.assign(STATE, { allExistingTags });
-  }
-
-  if (assignedTags) {
-    Object.assign(STATE, { assignedTags });
-  }
+  SERVER_RETURN_KEYS.forEach((key) => {
+    if (typeof data[key] !== 'undefined') {
+      STATE[key] = data[key];
+    }
+  });
 
   runListeners();
 }
@@ -103,10 +107,11 @@ function startSearch (query) {
   Message.startSearch(query);
 }
 
-function openSettings () {
-  Message.openSettings();
+function openPage (url) {
+  Message.openPage(url);
 }
 
-function openHelp () {
-  Message.openHelp();
+function switchTagPanel () {
+  STATE.tagPanelShown = !STATE.tagPanelShown;
+  runListeners();
 }

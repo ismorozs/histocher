@@ -1,0 +1,28 @@
+<div>
+  <div x-b="content">
+    <div x-b="visitedPagesSection" class="hidden">
+      <h3>Recently visited pages</h3>
+      <ul x-lb="recentlyVisitedPages">
+        <li x-b="title">
+      </ul>
+    </div>
+    <h3 x-b="switchTagsButton">Assaigned tags</h3>
+    <div x-b="tagsPanel" class="hidden">
+      <div x-b="assignedTagsSection" class="hidden">
+        <div x-lb="assignedTags">
+          <history-tag>
+        </div>
+      </div>
+      <div class="field">
+        <input x-b="newTagInput" /> <button x-b="addTagButton">Add tag</button>
+      </div>
+      <div class="field">
+        <select x-lb="allExistingTags">
+          <option x-b="option">
+        </select>
+      </div>
+    </div>
+    <button x-b="helpButton" class="link">How to use</button>
+    <button x-b="controlsButton" class="link">Controls</button>
+  </div>
+</div>

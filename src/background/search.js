@@ -2,21 +2,37 @@ const browser = require('webextension-polyfill');
 
 import Tag from './tags';
 import State from './state';
+import prepareOptions from './parse';
+import handleResults from './postProcess';
+
+const MAX_RESULTS = 2147483647;
 
 export default {
-  history: searchHistory,
-  tags: searchTags,
+  run,
   visitsForHistory: getVisitsForHistoryEntries,
 };
 
-function searchHistory (searchTerms, timeFrames) {
+function run (options, maxResults) {
+  if (typeof options === 'string') {
+    return run( prepareOptions(options) , maxResults);
+  }
+
+  if (options.tags.length) {
+    return searchTags(options.tags);
+  }
+  
+  return searchHistory(options).then((results) => handleResults(results, options).slice(0, maxResults || MAX_RESULTS));
+}
+
+function searchHistory ({ base, timeFrames }) {
+  const searchTerms = base.join(' ');
   const historyRequests = timeFrames.map((timeFrame) => makeHistoryRequest(searchTerms, timeFrame.start.getTime(), timeFrame.end.getTime()));
 
   return Promise.all(historyRequests).then(flattenArray);
 }
 
 function makeHistoryRequest (text, startTime, endTime) {
-  return browser.history.search({ text, startTime, endTime, maxResults: 2147483647 });
+  return browser.history.search({ text, startTime, endTime, maxResults: MAX_RESULTS });
 }
 
 function flattenArray (arr) {

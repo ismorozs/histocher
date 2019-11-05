@@ -3,43 +3,52 @@ import styles from './styles';
 import Store from '../../../store';
 import markup from './markup.html';
 
-Couli.define('options', markup, {
+import SearchQuery from '../search-query/index';
+
+import createHistoryTag from '../../../../common/ui/components/history-tag/index';
+
+const HistoryTag = createHistoryTag(Store);
+
+export default Couli.define({
+  historyTag: [ HistoryTag ],
+  searchQuery: [ SearchQuery ]
+}, markup, {
 
   selectedColor: {},
 
-  pageSize: { events: { keyup: (e) => Store.updateForm(e.target.value, 'PAGE_SIZE') } },
-
-  colorSchemes: {
-    events: { change: (e) => Store.updateForm(e.target.value, 'COLOR') },
-
-    attrs: ($) => ({ value: $.selectedColor })
+  pageSize: {
+    _eku: (e) => Store.updateForm(e.target.value, 'PAGE_SIZE'),
+    _ech: (e) => Store.updateForm(e.target.value, 'PAGE_SIZE')
+  },
+  visitedPagesLength: {
+    _eku: (e) => Store.updateForm(e.target.value, 'VISITED_PAGES_LENGTH'),
+    _ech: (e) => Store.updateForm(e.target.value, 'VISITED_PAGES_LENGTH')
   },
 
-  saveButton: { events: { click: (e) => Store.saveSettings() } },
-  defaultsButton: { events: { click: (e) => Store.resetToDefaults() } },
+  colorSchemes: {
+    _ech: (e) => Store.updateForm(e.target.value, 'COLOR'),
+
+    _a: ($) => ({ value: $.selectedColor })
+  },
+
+  saveButton: { _emc: (e) => Store.saveSettings() },
+  defaultsButton: { _emc: (e) => Store.resetToDefaults() },
+
+  tagsPanel: { _c: ($) => ({ hidden: !$.allExistingTags.length }) },
+  searchesPanel: { _c: ($) => ({ hidden: !$.savedSearches.length }) },
 
   '': {
-    hooks: {
-      mount: (el, data, ci) => {
-        ci.set(Store.getState());
+    _hm: (el, ci) => {
+      ci.set(Store.getState());
 
-        Store.addListener((store) => {
-          const state = store.getState();
-          ci.markup('colorSchemes').value = state.selectedColor;
+      Store.addListener((store) => {
+        const state = store.getState();
+        ci.markup('colorSchemes').value = state.selectedColor;     
+        ci.set(state);
+      });
 
-          switchElementVisibility(ci.markup('tagsPanel'), state.allExistingTags.length);
-          switchElementVisibility(ci.markup('searchesPanel'), state.savedSearches.length);
-          
-          ci.set(state);
-        });
-
-        Store.loadData();
-      }
+      Store.loadData();
     }
   }
 
 }, styles);
-
-function switchElementVisibility (el, bool) {
-  bool ? el.classList.remove('hidden') : el.classList.add('hidden')
-}

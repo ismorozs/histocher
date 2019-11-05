@@ -181,33 +181,26 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = "./src/main.js");
+/******/ 	return __webpack_require__(__webpack_require__.s = "./src/Component.js");
 /******/ })
 /************************************************************************/
 /******/ ({
 
-/***/ "./src/Definition.js":
-/*!***************************!*\
-  !*** ./src/Definition.js ***!
-  \***************************/
+/***/ "./src/Component.js":
+/*!**************************!*\
+  !*** ./src/Component.js ***!
+  \**************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.RESERVED_BINDING_NAMES = exports.VALUE_TYPES = exports.isComponent = exports.shortenBindingId = exports.getComponentOpts = exports.define = undefined;
-
-var _attributes = __webpack_require__(/*! ./globals/attributes */ "./src/globals/attributes.js");
+var _attributes = __webpack_require__(/*! ./values/attributes */ "./src/values/attributes.js");
 
 var _attributes2 = _interopRequireDefault(_attributes);
 
-var _regexp = __webpack_require__(/*! ./globals/regexp */ "./src/globals/regexp.js");
-
-var _regexp2 = _interopRequireDefault(_regexp);
+var _index = __webpack_require__(/*! ./values/index */ "./src/values/index.js");
 
 var _dom = __webpack_require__(/*! ./helpers/dom */ "./src/helpers/dom.js");
 
@@ -219,58 +212,49 @@ var _copy2 = _interopRequireDefault(_copy);
 
 var _checkers = __webpack_require__(/*! ./helpers/checkers */ "./src/helpers/checkers.js");
 
-var _common = __webpack_require__(/*! ./helpers/common */ "./src/helpers/common.js");
+var _EventHandler = __webpack_require__(/*! ./EventHandler */ "./src/EventHandler.js");
 
 var _State = __webpack_require__(/*! ./State */ "./src/State.js");
 
+var _StateSetup = __webpack_require__(/*! ./StateSetup */ "./src/StateSetup.js");
+
 var _View = __webpack_require__(/*! ./View */ "./src/View.js");
 
-var _ComponentRedefineError = __webpack_require__(/*! ./errors/ComponentRedefineError */ "./src/errors/ComponentRedefineError.js");
-
-var _ComponentRedefineError2 = _interopRequireDefault(_ComponentRedefineError);
-
-var _ScopeNameCollisionError = __webpack_require__(/*! ./errors/ScopeNameCollisionError */ "./src/errors/ScopeNameCollisionError.js");
-
-var _ScopeNameCollisionError2 = _interopRequireDefault(_ScopeNameCollisionError);
+var _prepareSettings = __webpack_require__(/*! ./prepareSettings */ "./src/prepareSettings.js");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
-var VALUE_TYPES = ['style', 'class', 'value', 'attrs', 'html'];
-var RESERVED_HOOKS_NAMES = ['mount', 'update', 'remove'];
-var DEFAULT_HOOKS = (0, _object.toObject)(RESERVED_HOOKS_NAMES, function () {
-  return function () {};
-});
-var RESERVED_BINDING_NAMES = VALUE_TYPES.concat(['events', 'hooks', 'listItem', _attributes2.default.SELF]);
+// eslint-disable-next-line no-undef
+module.exports = {
+  define: defineComponent,
+  change: changeComponent,
+  apply: applyComponent,
+  extract: extractComponent
+};
 
-exports.define = define;
-exports.getComponentOpts = getComponentOpts;
-exports.shortenBindingId = shortenBindingId;
-exports.isComponent = isComponent;
-exports.VALUE_TYPES = VALUE_TYPES;
-exports.RESERVED_BINDING_NAMES = RESERVED_BINDING_NAMES;
-
-
+var COMPONENT_PREFIX = 'c';
 var COMPONENT_COUNTER = 0;
-var COMPONENTS = {};
 
-function define(name, markup, bindings, styles) {
-  var args = (0, _checkers.isObject)(name) ? name : { name: name, markup: markup, bindings: bindings, styles: styles };
+function defineComponent(markup) {
+  var bindings = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+  var styles = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+  var subComponents = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};
 
-  name = (0, _common.toCamelCase)(args.name);
 
-  if (COMPONENTS[name]) {
-    throw new _ComponentRedefineError2.default(name);
+  if ((0, _checkers.isObject)(markup)) {
+    return defineComponent(bindings, styles, subComponents, markup);
   }
 
-  var componentHTMLMarkup = (0, _dom.cloneHTMLMarkup)(args.markup);
+  var name = COMPONENT_PREFIX + COMPONENT_COUNTER++;
+
+  var componentHTMLMarkup = (0, _dom.cloneHTMLMarkup)(markup);
   componentHTMLMarkup.classList.add(name);
 
-  COMPONENT_COUNTER = 0;
   var component = {
     name: name,
-    state: _defineProperty({}, _attributes2.default.SELF, {}),
+    bindings: _defineProperty({}, _attributes2.default.SELF, {}),
     stateId: name,
     statePath: [name],
     stateNames: {},
@@ -279,351 +263,68 @@ function define(name, markup, bindings, styles) {
     links: {},
     isComponent: true,
     outerNames: {},
-    _links: {}
+    _links: {},
+    subComponents: subComponents
   };
 
-  gatherBindingsFromMarkup(componentHTMLMarkup, component);
+  (0, _StateSetup.gatherBindingsFromMarkup)(componentHTMLMarkup, component, true);
 
-  var normalizedOptions = normalizeUserOptions(args.bindings, { state: {} });
+  var normalizedOptions = (0, _prepareSettings.prepareBindingsSettings)(bindings);
   (0, _copy2.default)(component, normalizedOptions);
 
-  prepareBindings(component, component.stateId, { statePath: [], links: {}, stateNames: component.stateNames });
-
-  (0, _View.createAndAppendStyles)(prepareStyles(args.styles, component));
-
-  return COMPONENTS[name] = component;
-}
-
-function gatherBindingsFromMarkup(componentHTMLMarkup, component) {
-  (0, _dom.walkNodes)(componentHTMLMarkup, function (HTMLNode) {
-    var bindingOpts = analyzeBinding(HTMLNode);
-
-    if (!bindingOpts) {
-      return;
-    }
-
-    var binding = createBinding(bindingOpts.name, component, HTMLNode);
-
-    if (bindingOpts.isComponent) {
-      setComponent(binding, bindingOpts);
-      HTMLNode.classList.add(_attributes2.default.PREFIX + binding.id);
-    }
-
-    component.state[binding.name] = binding;
-    binding.markup.classList.add(_attributes2.default.PREFIX + binding.id, component.name + '-' + binding.name);
-
-    if (bindingOpts.isList) {
-      var itemNode = HTMLNode.children[0];
-      modifyToListBinding(binding, itemNode);
-
-      if (isComponent(itemNode)) {
-        setComponent(binding.listItem, getComponentOpts(itemNode));
-        return -1;
-      }
-
-      gatherBindingsFromMarkup(itemNode, binding.listItem);
-      return -1;
-    }
-  });
+  component.styles = (0, _prepareSettings.prepareStyles)(styles, component);
+  (0, _StateSetup.prepareBindings)(component, component.stateId, { statePath: [], styles: component.styles, links: {}, stateNames: component.stateNames });
 
   return component;
 }
 
-function setComponent(componentBinding, subComponentOpts) {
-  var stateNames = Object.assign(componentBinding.stateNames, subComponentOpts.component.stateNames);
-  var stateId = subComponentOpts.component.name + 'x' + COMPONENT_COUNTER++;
+function changeComponent(component, changes) {
+  var newComponent = (0, _copy2.default)({}, component);
 
-  if (subComponentOpts.stateName) {
-    if (stateNames[subComponentOpts.stateName]) {
-      throw new _ScopeNameCollisionError2.default(subComponentOpts.stateName);
-    }
+  (0, _object.forEach)(changes, function (bindingChanges, bindingName) {
+    (0, _object.forEach)((0, _prepareSettings.prepareBindingSettings)(bindingChanges), function (newFn, type) {
 
-    stateId = subComponentOpts.stateName;
-    componentBinding.stateNames[stateId] = true;
-  }
+      if (_index.BEHAVIOUR_TYPES.includes(type)) {
+        (0, _object.forEach)(newFn, function (newEventFn, eventName) {
+          var prevFn = newComponent.bindings[bindingName][type][eventName];
+          newComponent.bindings[bindingName][type][eventName] = function (e, accessor) {
+            return newEventFn.call(null, e, accessor, prevFn);
+          };
+        });
 
-  (0, _copy2.default)(componentBinding, subComponentOpts.component);
-
-  return Object.assign(componentBinding, {
-    id: stateId,
-    stateId: stateId,
-    name: stateId,
-    stateName: subComponentOpts.stateName,
-    statePath: componentBinding.statePath.concat(stateId),
-    markup: subComponentOpts.component.markup.cloneNode(true),
-    isComponent: true,
-    stateNames: stateNames,
-    _links: Object.assign({}, subComponentOpts.links),
-    outerNames: Object.assign({}, subComponentOpts.revLinks)
-  });
-}
-
-function prepareBindings(component, currentStateId, parentComponent) {
-  var componentWrapper = document.createElement('div');
-  component.markup.setAttribute(_attributes2.default.BINDING_ID, shortenBindingId(currentStateId + _attributes2.default.STATE_DELIMITER + _attributes2.default.SELF));
-  componentWrapper.appendChild(component.markup);
-  component.statePath = parentComponent.statePath.concat(component.stateId);
-  component.stateNames = parentComponent.stateNames;
-
-  var subComponents = [];
-
-  (0, _object.forEach)(component.state, function (binding, bindingName) {
-    var oldBindingId = binding.id;
-    var newBindingId = currentStateId + _attributes2.default.STATE_DELIMITER + bindingName;
-    var shortId = shortenBindingId(newBindingId);
-
-    if (binding.markup) {
-      var bindingNode = componentWrapper.querySelector('.' + _attributes2.default.PREFIX + oldBindingId);
-      bindingNode.setAttribute(_attributes2.default.BINDING_ID, shortId);
-      bindingNode.classList.remove(_attributes2.default.PREFIX + oldBindingId);
-      bindingNode.classList.add(_attributes2.default.PREFIX + newBindingId);
-    }
-
-    Object.assign(binding, {
-      statePath: component.statePath.slice(),
-      hooks: Object.assign({}, DEFAULT_HOOKS, binding.hooks),
-      id: newBindingId,
-      shortId: shortId
-    });
-
-    prepareReactiveFuncs(binding, component);
-
-    if (binding.isList) {
-      binding.statePath.push(bindingName);
-      binding.stateNames = component.stateNames;
-
-      prepareBindings(binding.listItem, newBindingId + _attributes2.default.STATE_DELIMITER + _attributes2.default.ITEM + binding.listItem.name, binding);
-      return;
-    }
-
-    if (binding.isComponent) {
-      subComponents.push(binding);
-    }
-  });
-
-  setupComponentsLinks(component, parentComponent);
-  component.template = component.markup.cloneNode(true);
-
-  subComponents.forEach(function (subComponent) {
-    prepareBindings(subComponent, currentStateId + _attributes2.default.STATE_DELIMITER + subComponent.stateId, component);
-  });
-}
-
-function prepareReactiveFuncs(binding, componentData) {
-  VALUE_TYPES.forEach(function (type) {
-    var reactiveFunc = binding[type];
-    if (!reactiveFunc) {
-      return;
-    }
-
-    binding.evaluate[type] = prepareReactiveFunc(binding, type, reactiveFunc, componentData);
-  });
-}
-
-function prepareReactiveFunc(binding, type, reactiveFunc, componentData) {
-  var dependenciesNames = getDependenciesNames(reactiveFunc);
-
-  dependenciesNames.forEach(function (dependencyName) {
-    if ((0, _checkers.isEmpty)(componentData.state[dependencyName])) {
-      componentData.state[dependencyName] = createBinding(dependencyName, componentData);
-    }
-
-    componentData.state[dependencyName].dependants[binding.name + ':' + type] = { name: binding.name, type: type };
-  });
-
-  return function (values, componentInterface) {
-    return compute(reactiveFunc, values, componentInterface);
-  };
-}
-
-function getDependenciesNames(func) {
-  var funcParams = getParamNames(func);
-  var valuesObjRegExp = new RegExp('\\' + funcParams[0] + '\\.(\\D[^\\s\\W]+)', 'g');
-  var dependenciesNames = [];
-  var funcStr = func.toString();
-  var dependencyName = void 0;
-  while (dependencyName = valuesObjRegExp.exec(funcStr)) {
-    dependenciesNames.push(dependencyName[1]);
-  }
-  return dependenciesNames;
-}
-
-function getParamNames(func) {
-  var funcStrWithoutComments = func.toString().replace(_regexp2.default.STRIP_COMMENTS, '');
-  var paramsStr = funcStrWithoutComments.slice(funcStrWithoutComments.indexOf('(') + 1, funcStrWithoutComments.indexOf(')'));
-  return paramsStr.match(_regexp2.default.ARGUMENT_NAMES) || [];
-}
-
-function compute(func, valuesObj, componentInterface) {
-  return func.call(this, (0, _State.getOnlyValues)(valuesObj), componentInterface);
-}
-
-function setupComponentsLinks(component, parentComponent) {
-  Object.assign(parentComponent.links, (0, _object.map)(component.outerNames, function (k) {
-    return { link: k, component: component.stateId };
-  }));
-}
-
-function normalizeUserOptions(optionsObj, parentObj, parentKey) {
-  if ((0, _checkers.isFunction)(optionsObj)) {
-    return (0, _object.set)(parentObj, [parentKey], { class: optionsObj });
-  }
-
-  if ((0, _checkers.isArray)(optionsObj)) {
-
-    if (optionsObj.length > 1) {
-      optionsObj.forEach(function (option) {
-        return normalizeUserOptions(option, parentObj, parentKey);
-      });
-      return;
-    }
-
-    if ((0, _checkers.isFunction)(optionsObj[0])) {
-      return (0, _object.set)(parentObj, [parentKey], { value: optionsObj[0] });
-    }
-    if ((0, _checkers.isObject)(optionsObj[0])) {
-      return (0, _object.set)(parentObj, [parentKey], { events: optionsObj[0] });
-    }
-  }
-
-  (0, _object.forEach)(optionsObj, function (value, key) {
-    delete optionsObj[key];
-    var binding = createBinding(key);
-
-    if ((0, _checkers.isObject)(value)) {
-      parentObj['state'][key] = Object.assign(binding, value);
-      return;
-    }
-
-    parentObj['state'][key] = binding;
-    normalizeUserOptions(value, parentObj['state'], key);
-  });
-
-  return parentObj;
-}
-
-function analyzeBinding(el) {
-  if (isComponent(el)) {
-    return getComponentOpts(el);
-  }
-
-  if (!el.getAttribute) {
-    return null;
-  }
-
-  var name = el.getAttribute(_attributes2.default.TEMPLATE_BINDING);
-  el.removeAttribute(_attributes2.default.TEMPLATE_BINDING);
-
-  if (name) {
-    return { name: name.trim() };
-  }
-
-  name = el.getAttribute(_attributes2.default.TEMPLATE_LIST_BINDING);
-  el.removeAttribute(_attributes2.default.TEMPLATE_LIST_BINDING);
-
-  if (name) {
-    return { name: name.trim(), isList: true };
-  }
-}
-
-function isComponent(el) {
-  var tagName = el.tagName && el.tagName.toLowerCase();
-  return tagName && COMPONENTS[(0, _common.toCamelCase)(tagName)];
-}
-
-function getComponentOpts(obj) {
-  var name = (0, _common.toCamelCase)(obj.tagName.toLowerCase());
-  var component = getComponentByName(name);
-  var links = {};
-  var revLinks = {};
-  var stateName = null;
-
-  Array.prototype.slice.call(obj.attributes).forEach(function (attr) {
-
-    if (attr.name === _attributes2.default.STATE_NAME) {
-      stateName = attr.value;
-      return;
-    }
-
-    var innerLink = (0, _common.toCamelCase)(attr.name);
-    links[innerLink] = attr.value;
-    revLinks[attr.value] = innerLink;
-  });
-
-  return {
-    component: component,
-    links: links,
-    revLinks: revLinks,
-    stateName: stateName,
-    name: name,
-    isComponent: true
-  };
-}
-
-function getComponentByName(name) {
-  return COMPONENTS[(0, _common.toCamelCase)(name)];
-}
-
-function createBinding(name, component, el) {
-  var componentOpts = component ? {
-    id: component.stateId + _attributes2.default.STATE_DELIMITER + name,
-    statePath: component.statePath,
-    stateNames: component.stateNames,
-    isListItem: component.isList,
-    stateId: name
-  } : {};
-
-  var elOpts = el ? {
-    initValue: el.value || el.innerHTML
-  } : {};
-
-  return Object.assign({
-    name: name,
-    listeners: [],
-    markup: el,
-    dependants: {},
-    events: {},
-    evaluate: {},
-    links: {},
-    state: _defineProperty({}, _attributes2.default.SELF, {}),
-    outerNames: {},
-    _links: {}
-
-  }, componentOpts, elOpts);
-}
-
-function modifyToListBinding(binding, itemMarkup) {
-  binding.isList = true;
-
-  return Object.assign(binding, {
-    markup: itemMarkup,
-    listItem: createBinding(itemMarkup.tagName, binding, itemMarkup)
-  });
-}
-
-function shortenBindingId(id) {
-  return id.split(_attributes2.default.STATE_DELIMITER).map(function (el) {
-    return (0, _common.getShortName)(el);
-  }).join(_attributes2.default.STATE_DELIMITER);
-}
-
-function prepareStyles(styleArg, component) {
-  return (0, _object.mapKeys)(styleArg, function (key) {
-    return key.split(',').map(function (selector) {
-      return selector.trim();
-    }).map(function (selector) {
-
-      var className = '.' + component.name;
-
-      if (selector) {
-        var isBinding = component.state[selector.split(' ')[0].split('::')[0].split(':')[0]];
-        var prefix = isBinding ? className + '-' : '';
-        className += ' ' + prefix + selector;
+        return;
       }
 
-      return className;
-    }).join(',');
+      var prevFn = newComponent.bindings[bindingName][type];
+      newComponent.bindings[bindingName][type] = function (vals, accessor) {
+        return newFn.call(null, vals, accessor, prevFn);
+      };
+    });
   });
+
+  return newComponent;
+}
+
+function applyComponent(containerEl, component) {
+  var element = (0, _State.createElement)(component);
+  (0, _View.createAndAppendStyles)(component.styles);
+  (0, _EventHandler.setupEventHandlers)(element);
+  containerEl.setAttribute(_attributes2.default.COMPONENT_TYPE, _attributes2.default.BASE);
+  element.el.setAttribute(_attributes2.default.COMPONENT_ID, element.id);
+  containerEl.appendChild(element.el);
+  return element.ci;
+}
+
+function extractComponent(node) {
+  var componentNode = (0, _dom.walkUpNodes)(node, function (el) {
+    return el.getAttribute(_attributes2.default.COMPONENT_TYPE);
+  });
+  var rootNode = (0, _dom.walkUpNodes)(componentNode, function (el) {
+    return el.getAttribute(_attributes2.default.COMPONENT_TYPE) == _attributes2.default.BASE;
+  });
+  var componentId = rootNode.firstElementChild.getAttribute(_attributes2.default.COMPONENT_ID);
+  var statePath = (0, _State.getStatePathFromNode)(componentNode);
+  return (0, _State.createAccessor)([componentId].concat(statePath));
 }
 
 /***/ }),
@@ -643,13 +344,13 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.setupEventHandlers = undefined;
 
-var _attributes = __webpack_require__(/*! ./globals/attributes */ "./src/globals/attributes.js");
+var _attributes = __webpack_require__(/*! ./values/attributes */ "./src/values/attributes.js");
 
 var _attributes2 = _interopRequireDefault(_attributes);
 
 var _object = __webpack_require__(/*! ./helpers/object */ "./src/helpers/object.js");
 
-var _common = __webpack_require__(/*! ./helpers/common */ "./src/helpers/common.js");
+var _dom = __webpack_require__(/*! ./helpers/dom */ "./src/helpers/dom.js");
 
 var _State = __webpack_require__(/*! ./State */ "./src/State.js");
 
@@ -668,7 +369,7 @@ function setupEventHandlers(element) {
 
   var _loop = function _loop(eventName) {
     markup.addEventListener(eventName, function (e) {
-      return executeAllCallbacksInList(e, eventHandlers[eventName], element);
+      return executeAllCallbacksInList(e, eventHandlers[eventName]);
     });
   };
 
@@ -680,8 +381,8 @@ function setupEventHandlers(element) {
 function gatherAllEventHandlers(component, gatheredHandlers) {
   gatherEventHandlers(component, gatheredHandlers);
 
-  if (component.state) {
-    (0, _object.forEach)(component.state, function (binding) {
+  if (component.bindings) {
+    (0, _object.forEach)(component.bindings, function (binding) {
       return gatherAllEventHandlers(binding, gatheredHandlers);
     });
   }
@@ -705,28 +406,34 @@ function gatherEventHandlers(binding, gatheredHandlers) {
   }
 }
 
-function executeAllCallbacksInList(e, eventHandlers, element) {
+function executeAllCallbacksInList(e, eventHandlers) {
   decorateEvent(e);
   (0, _StateChange.startTransaction)();
 
-  var curHTMLNode = e.target;
-  while (curHTMLNode !== element.el.parentNode) {
-    var bindingId = curHTMLNode.getAttribute(_attributes2.default.BINDING_ID);
+  var handlers = [];
+  var rootNode = (0, _dom.walkUpNodes)(e.target, function (el) {
+    return el.getAttribute(_attributes2.default.COMPONENT_TYPE) == _attributes2.default.BASE;
+  }, function (el) {
+    var bindingId = el.getAttribute(_attributes2.default.BINDING_ID);
     var eventHandler = eventHandlers[bindingId];
 
     if (eventHandler) {
-      var indexlessStatePath = bindingId.split(_attributes2.default.STATE_DELIMITER);
-      indexlessStatePath.pop();
-      var statePathToItem = getStatePathToItem(curHTMLNode, indexlessStatePath);
-      var accessorToData = (0, _State.createAccessor)([element.id].concat(statePathToItem));
-
-      eventHandler.call(this, e, curHTMLNode, accessorToData, +statePathToItem.slice(-2)[0]);
-
-      if (e.propagationStopped) {
-        break;
-      }
+      handlers.push({ fn: eventHandler, path: (0, _State.getStatePathFromNode)(el) });
     }
-    curHTMLNode = curHTMLNode.parentNode;
+  });
+
+  var componentId = rootNode.firstElementChild.getAttribute(_attributes2.default.COMPONENT_ID);
+
+  for (var i = 0; i < handlers.length; i++) {
+    var _handlers$i = handlers[i],
+        fn = _handlers$i.fn,
+        path = _handlers$i.path;
+
+    fn.call(this, e, (0, _State.createAccessor)([componentId].concat(path)));
+
+    if (e.propagationStopped) {
+      break;
+    }
   }
 
   (0, _StateChange.applyChanges)();
@@ -738,84 +445,6 @@ function decorateEvent(e) {
     e.propagationStopped = true;
     stopPropagation();
   };
-}
-
-function getStatePathToItem(el, indexlessStatePath) {
-  var statePath = [];
-
-  var elementName = void 0;
-  while (elementName = (0, _common.getRealName)(indexlessStatePath.pop())) {
-
-    if ((0, _common.has)(elementName, _attributes2.default.ITEM)) {
-      elementName = elementName.slice(_attributes2.default.ITEM.length);
-      el = getToItemNode(el);
-      var idx = el.getAttribute(_attributes2.default.ITEM_INDEX);
-      el = el.parentNode;
-      statePath.unshift(idx, elementName);
-      continue;
-    }
-
-    statePath.unshift(elementName);
-  }
-
-  return statePath;
-}
-
-function getToItemNode(el) {
-  var curEl = el;
-
-  while (curEl.tagName !== 'BODY') {
-    if (curEl.getAttribute(_attributes2.default.ITEM_INDEX)) {
-      return curEl;
-    }
-    curEl = curEl.parentNode;
-  }
-}
-
-/***/ }),
-
-/***/ "./src/Production.js":
-/*!***************************!*\
-  !*** ./src/Production.js ***!
-  \***************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.apply = undefined;
-
-var _dom = __webpack_require__(/*! ./helpers/dom */ "./src/helpers/dom.js");
-
-var _Definition = __webpack_require__(/*! ./Definition */ "./src/Definition.js");
-
-var _EventHandler = __webpack_require__(/*! ./EventHandler */ "./src/EventHandler.js");
-
-var _State = __webpack_require__(/*! ./State */ "./src/State.js");
-
-exports.apply = apply;
-
-
-function apply(rootElementSelector) {
-  var rootElement = document.querySelector(rootElementSelector);
-  var HTMLNodes = (0, _dom.collectHTMLNodes)(rootElement, _Definition.isComponent);
-
-  HTMLNodes.forEach(function (HTMLNode) {
-    var componentOpts = (0, _Definition.getComponentOpts)(HTMLNode);
-    var element = setupElement(componentOpts);
-
-    (0, _dom.replaceNodes)(HTMLNode, element.el);
-  });
-}
-
-function setupElement(componentOpts) {
-  var element = (0, _State.createElement)(componentOpts);
-  (0, _EventHandler.setupEventHandlers)(element);
-  return element;
 }
 
 /***/ }),
@@ -833,9 +462,9 @@ function setupElement(componentOpts) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.prepareChangeObject = exports.setState = exports.getComponent = exports.getOnlyValues = exports.createAccessor = exports.createElement = undefined;
+exports.getStatePathFromNode = exports.prepareChangeObject = exports.setState = exports.getComponent = exports.createAccessor = exports.createElement = exports.modifyToListBinding = exports.createBinding = undefined;
 
-var _attributes = __webpack_require__(/*! ./globals/attributes */ "./src/globals/attributes.js");
+var _attributes = __webpack_require__(/*! ./values/attributes */ "./src/values/attributes.js");
 
 var _attributes2 = _interopRequireDefault(_attributes);
 
@@ -843,7 +472,17 @@ var _object = __webpack_require__(/*! ./helpers/object */ "./src/helpers/object.
 
 var _common = __webpack_require__(/*! ./helpers/common */ "./src/helpers/common.js");
 
-var _Definition = __webpack_require__(/*! ./Definition */ "./src/Definition.js");
+var _index = __webpack_require__(/*! ./values/index */ "./src/values/index.js");
+
+var _dom = __webpack_require__(/*! ./helpers/dom */ "./src/helpers/dom.js");
+
+var _ComponentLookupError = __webpack_require__(/*! ./errors/ComponentLookupError */ "./src/errors/ComponentLookupError.js");
+
+var _ComponentLookupError2 = _interopRequireDefault(_ComponentLookupError);
+
+var _ForbiddenBindingNameError = __webpack_require__(/*! ./errors/ForbiddenBindingNameError */ "./src/errors/ForbiddenBindingNameError.js");
+
+var _ForbiddenBindingNameError2 = _interopRequireDefault(_ForbiddenBindingNameError);
 
 var _StateChange = __webpack_require__(/*! ./StateChange */ "./src/StateChange.js");
 
@@ -853,15 +492,17 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
+exports.createBinding = createBinding;
+exports.modifyToListBinding = modifyToListBinding;
 exports.createElement = createElement;
 exports.createAccessor = createAccessor;
-exports.getOnlyValues = getOnlyValues;
 exports.getComponent = getComponent;
 exports.setState = setState;
 exports.prepareChangeObject = prepareChangeObject;
+exports.getStatePathFromNode = getStatePathFromNode;
 
 
-var ELEMENTS = {};
+var COMPONENTS = {};
 var STATE = {};
 var ELEMENT_COUNTER = 1;
 
@@ -873,13 +514,13 @@ function getState(path) {
   return (0, _object.get)(STATE, path);
 }
 
-function createElement(componentOpts) {
+function createElement(component) {
   var id = ELEMENT_COUNTER++;
-  var name = componentOpts.name;
+  var name = component.name;
 
-  var element = ELEMENTS[id] = {
+  var element = COMPONENTS[id] = {
     id: id,
-    state: _defineProperty({}, name, componentOpts.component)
+    bindings: _defineProperty({}, name, component)
   };
 
   STATE[id] = {};
@@ -889,7 +530,7 @@ function createElement(componentOpts) {
   (0, _StateChange.sendToRenderQueue)([id], _defineProperty({}, name, false));
   (0, _StateChange.applyChanges)();
   element.el = STATE[id][name][_attributes2.default.SELF].el;
-  element.el.setAttribute(_attributes2.default.COMPONENT_TYPE, _attributes2.default.BASE);
+  element.ci = createAccessor([id, name]);
 
   return element;
 }
@@ -902,6 +543,7 @@ function createAccessor(path) {
     component: component,
     values: values,
     path: path,
+    index: +path[path.length - 2],
     startTransaction: _StateChange.startTransaction,
     applyChanges: _StateChange.applyChanges,
     up: function up(level) {
@@ -941,10 +583,10 @@ function prepareChangeObject(changeObj) {
 }
 
 function getComponent(path) {
-  var component = ELEMENTS[path[0]];
+  var component = COMPONENTS[path[0]];
 
   for (var i = 1; i < path.length; i++) {
-    component = component.state[path[i]];
+    component = component.bindings[path[i]];
 
     if (component.isList && i !== path.length - 1) {
       component = component.listItem;
@@ -955,12 +597,6 @@ function getComponent(path) {
   return component;
 }
 
-function getOnlyValues(obj) {
-  return (0, _object.map)(obj, function (bindingValues) {
-    return bindingValues['value'];
-  });
-}
-
 function getValues(accessor, key, statePath) {
   var values = accessor.values;
   var component = accessor.component;
@@ -969,7 +605,7 @@ function getValues(accessor, key, statePath) {
     return getValuesTree(values, component, {});
   }
 
-  var binding = component.state[key];
+  var binding = component.bindings[key];
   if (binding.isList || binding.isComponent) {
     return createAccessor(statePath.concat(key));
   }
@@ -979,11 +615,11 @@ function getValues(accessor, key, statePath) {
 
 function getValuesTree(values, component, valuesTree) {
   (0, _object.forEach)(values, function (vals, bindingName) {
-    if ((0, _common.has)(_Definition.RESERVED_BINDING_NAMES, bindingName)) {
+    if ((0, _common.has)(_index.RESERVED_BINDING_NAMES, bindingName)) {
       return;
     }
 
-    var binding = component.state[bindingName];
+    var binding = component.bindings[bindingName];
 
     if (binding.isList) {
       valuesTree[bindingName] = [];
@@ -1008,7 +644,7 @@ function getValuesTree(values, component, valuesTree) {
 function moveUpStatePath(level, statePath) {
   var lastIdx = statePath.length;
 
-  if (level === '') {
+  if (level === '' || level === ' ') {
     return createAccessor(statePath.slice(0, 2));
   }
 
@@ -1018,15 +654,17 @@ function moveUpStatePath(level, statePath) {
         break;
       }
     }
-
-    return createAccessor(statePath.slice(0, lastIdx + 1));
+  } else {
+    level = level || 1;
+    while (lastIdx-- && level--) {
+      if ((0, _checkers.isNumber)(+statePath[lastIdx - 1])) {
+        lastIdx--;
+      }
+    }
   }
 
-  level = level || 1;
-  while (lastIdx-- && level--) {
-    if ((0, _checkers.isNumber)(+statePath[lastIdx - 1])) {
-      lastIdx--;
-    }
+  if (lastIdx < 1) {
+    throw new _ComponentLookupError2.default(level, statePath);
   }
 
   return createAccessor(statePath.slice(0, lastIdx + 1));
@@ -1102,6 +740,73 @@ function mapList(accessor, cb) {
   return newList;
 }
 
+function createBinding(name, component, el) {
+  if (_index.VALUE_TYPES.includes(name)) {
+    throw new _ForbiddenBindingNameError2.default(name);
+  }
+
+  var componentOpts = component ? {
+    id: component.stateId + _attributes2.default.STATE_DELIMITER + name,
+    statePath: component.statePath,
+    stateNames: component.stateNames,
+    isListItem: component.isList,
+    stateId: name
+  } : {};
+
+  var elOpts = el ? {
+    initValue: el.value || el.innerHTML
+  } : {};
+
+  return Object.assign({
+    name: name,
+    listeners: [],
+    markup: el,
+    dependants: {},
+    events: {},
+    evaluate: {},
+    links: {},
+    bindings: _defineProperty({}, _attributes2.default.SELF, {}),
+    outerNames: {},
+    _links: {},
+    styles: {}
+  }, componentOpts, elOpts);
+}
+
+function modifyToListBinding(binding, itemMarkup) {
+  binding.isList = true;
+
+  return Object.assign(binding, {
+    markup: itemMarkup,
+    listItem: createBinding(itemMarkup.tagName, binding, itemMarkup)
+  });
+}
+
+function getStatePathFromNode(el) {
+  var indexlessStatePath = el.getAttribute(_attributes2.default.BINDING_ID).split(_attributes2.default.STATE_DELIMITER);
+  indexlessStatePath.pop();
+
+  var statePath = [];
+
+  var elementName = void 0;
+  while (elementName = (0, _common.getRealName)(indexlessStatePath.pop())) {
+
+    if ((0, _common.has)(elementName, _attributes2.default.ITEM)) {
+      elementName = elementName.slice(_attributes2.default.ITEM.length);
+      el = (0, _dom.walkUpNodes)(el, function (el) {
+        return el.getAttribute(_attributes2.default.ITEM_INDEX);
+      });
+      var idx = el.getAttribute(_attributes2.default.ITEM_INDEX);
+      el = el.parentNode;
+      statePath.unshift(idx, elementName);
+      continue;
+    }
+
+    statePath.unshift(elementName);
+  }
+
+  return statePath;
+}
+
 /***/ }),
 
 /***/ "./src/StateChange.js":
@@ -1119,7 +824,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.sendToRenderQueue = exports.applyChanges = exports.startTransaction = exports.modifyList = exports.createStateNodes = exports.setValues = undefined;
 
-var _attributes = __webpack_require__(/*! ./globals/attributes */ "./src/globals/attributes.js");
+var _attributes = __webpack_require__(/*! ./values/attributes */ "./src/values/attributes.js");
 
 var _attributes2 = _interopRequireDefault(_attributes);
 
@@ -1137,7 +842,7 @@ var _State = __webpack_require__(/*! ./State */ "./src/State.js");
 
 var _View = __webpack_require__(/*! ./View */ "./src/View.js");
 
-var _Definition = __webpack_require__(/*! ./Definition */ "./src/Definition.js");
+var _index = __webpack_require__(/*! ./values/index */ "./src/values/index.js");
 
 var _BindingNotExistsError = __webpack_require__(/*! ./errors/BindingNotExistsError */ "./src/errors/BindingNotExistsError.js");
 
@@ -1204,13 +909,15 @@ function isCollectingChanges() {
   return CHANGES.collecting;
 }
 
-function addLifeCycleHook(hookType, binding, values, accessor, idx) {
+function addLifeCycleHook(hookType, binding, values, accessor) {
   var hook = binding.hooks[hookType];
 
   LIFE_CYCLE_HANDLERS.list.push(function () {
-    var el = values[binding.name || _attributes2.default.SELF].el;
-    var vals = !binding.name ? (0, _State.getOnlyValues)(values) : values[binding.name].value;
-    hook(el, vals, accessor, idx);
+    var name = binding.name || binding.statePath[binding.statePath.length - 1];
+    var isComponent = !binding.name;
+    var el = values[binding.name || _attributes2.default.SELF].el || values[_attributes2.default.SELF].el;
+    var value = !binding.name ? accessor.get() : accessor.get(binding.name);
+    hook({ el: el, value: value, name: name, isComponent: isComponent }, accessor);
   });
 }
 
@@ -1219,23 +926,23 @@ function createStateNodes(statePath) {
   var valuesNode = createStateNode(component);
   (0, _State.setState)(statePath, valuesNode);
 
-  (0, _object.forEach)(component.state, function (binding, bindingName) {
+  (0, _object.forEach)(component.bindings, function (binding, bindingName) {
     if (binding.isComponent) {
       createStateNodes(statePath.concat(bindingName));
     }
   });
 
   var accessor = (0, _State.createAccessor)(statePath);
-  addLifeCycleHook('mount', component.state[_attributes2.default.SELF], valuesNode, accessor, statePath.slice(-2)[0]);
+  addLifeCycleHook('mount', component.bindings[_attributes2.default.SELF], valuesNode, accessor, statePath.slice(-2)[0]);
 
   return valuesNode;
 }
 
 function createStateNode(component) {
-  var valuesNodes = (0, _object.map)(component.state, function (binding) {
+  var valuesNodes = (0, _object.map)(component.bindings, function (binding) {
     var valueNode = binding.isList ? [] : {};
 
-    return _Definition.VALUE_TYPES.reduce(function (a, key) {
+    return _index.VALUE_TYPES.reduce(function (a, key) {
       var value = void 0;
 
       switch (key) {
@@ -1254,7 +961,7 @@ function createStateNode(component) {
     }, valueNode);
   });
 
-  return Object.assign(valuesNodes, _defineProperty({}, _attributes2.default.SELF, (0, _object.toObject)(_Definition.VALUE_TYPES, {})));
+  return Object.assign(valuesNodes, _defineProperty({}, _attributes2.default.SELF, (0, _object.toObject)(_index.VALUE_TYPES, {})));
 }
 
 function setValues(changeValues, statePath, calledDependences) {
@@ -1271,7 +978,7 @@ function setValues(changeValues, statePath, calledDependences) {
     return setValue(bindingName, change, accessor, calledDependences);
   });
 
-  addLifeCycleHook('update', accessor.component.state[_attributes2.default.SELF], accessor.values, accessor, statePath.slice(-2)[0]);
+  addLifeCycleHook('update', accessor.component.bindings[_attributes2.default.SELF], accessor.values, accessor, statePath.slice(-2)[0]);
 
   if (isCollectingChanges()) {
     return new Promise(function (res) {
@@ -1286,20 +993,23 @@ function setValue(bindingName, change, accessor, calledDependences) {
   var statePath = accessor.path;
   var component = accessor.component;
   var values = accessor.values;
-  var binding = component.state[bindingName];
+  var binding = component.bindings[bindingName];
+  var outerBindingName = bindingName;
 
   if (!binding) {
     bindingName = component.outerNames[bindingName];
-    binding = component.state[bindingName];
+    binding = component.bindings[bindingName];
   }
 
   if (!binding) {
-    throw new _BindingNotExistsError2.default(bindingName, component.name, statePath);
+    throw new _BindingNotExistsError2.default(bindingName || outerBindingName, component.stateName, statePath);
   }
 
   if (change.type === 'value') {
     if (binding.isList) {
-      return setValueForList(binding, change, values[bindingName], accessor);
+      setValueForList(binding, change, values[bindingName], accessor);
+      updateDependants(binding.dependants, component, accessor, calledDependences);
+      return;
     }
 
     if ((0, _checkers.isObject)(change.value) && binding.isComponent) {
@@ -1328,15 +1038,22 @@ function setValue(bindingName, change, accessor, calledDependences) {
       setValue(link.link, { value: change.value, type: 'value', force: change.force }, accessor.down(link.component), []);
     }
 
-    (0, _object.forEach)(binding.dependants, function (dependant, dependantKey) {
-      if ((0, _common.has)(calledDependences, dependantKey)) {
-        return;
-      }
-
-      var newValue = component.state[dependant.name].evaluate[dependant.type](values, accessor);
-      setValue(dependant.name, { value: newValue, type: dependant.type }, accessor, calledDependences);
-    });
+    updateDependants(binding.dependants, component, accessor, calledDependences);
   }
+}
+
+function updateDependants(dependants, component, accessor, calledDependences) {
+  (0, _object.forEach)(dependants, function (dependant, dependantKey) {
+    if ((0, _common.has)(calledDependences, dependantKey)) {
+      return;
+    }
+
+    var values = (0, _object.mapKeys)(accessor.get(), function (k) {
+      return component.outerNames[k] || k;
+    });
+    var newValue = component.bindings[dependant.name].evaluate[dependant.type](values, accessor);
+    setValue(dependant.name, { value: newValue, type: dependant.type }, accessor, calledDependences);
+  });
 }
 
 function setValueForList(binding, change, arr, accessor) {
@@ -1382,6 +1099,8 @@ function modifyList(action, args, accessor) {
     return sendToRenderQueue(listPath.concat(idx, itemName, _attributes2.default.FULL_CHANGE), changeObj[idx][_attributes2.default.FULL_CHANGE]);
   });
 
+  updateDependants(accessor.component.dependants, accessor.up().component, accessor.up(), []);
+
   if (isCollectingChanges()) {
     return new Promise(function (res) {
       return PROMISES_RESOLVES.push(res);
@@ -1415,8 +1134,284 @@ function removeFromList(arr, start, end, listBinding, accessor) {
 
 function removeListItem(arr, idx, listBinding, accessor) {
   var removedNode = arr.splice(idx, 1)[0][listBinding.listItem.name];
-  addLifeCycleHook('remove', listBinding.listItem.state[_attributes2.default.SELF], removedNode, accessor, idx);
+  addLifeCycleHook('remove', listBinding.listItem.bindings[_attributes2.default.SELF], removedNode, accessor, idx);
   return removedNode[_attributes2.default.SELF].el;
+}
+
+/***/ }),
+
+/***/ "./src/StateSetup.js":
+/*!***************************!*\
+  !*** ./src/StateSetup.js ***!
+  \***************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.prepareBindings = exports.gatherBindingsFromMarkup = undefined;
+
+var _attributes = __webpack_require__(/*! ./values/attributes */ "./src/values/attributes.js");
+
+var _attributes2 = _interopRequireDefault(_attributes);
+
+var _regexp = __webpack_require__(/*! ./values/regexp */ "./src/values/regexp.js");
+
+var _regexp2 = _interopRequireDefault(_regexp);
+
+var _index = __webpack_require__(/*! ./values/index */ "./src/values/index.js");
+
+var _dom = __webpack_require__(/*! ./helpers/dom */ "./src/helpers/dom.js");
+
+var _object = __webpack_require__(/*! ./helpers/object */ "./src/helpers/object.js");
+
+var _copy = __webpack_require__(/*! ./helpers/copy */ "./src/helpers/copy.js");
+
+var _copy2 = _interopRequireDefault(_copy);
+
+var _checkers = __webpack_require__(/*! ./helpers/checkers */ "./src/helpers/checkers.js");
+
+var _common = __webpack_require__(/*! ./helpers/common */ "./src/helpers/common.js");
+
+var _State = __webpack_require__(/*! ./State */ "./src/State.js");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+exports.gatherBindingsFromMarkup = gatherBindingsFromMarkup;
+exports.prepareBindings = prepareBindings;
+
+
+var SUB_COMPONENT_PREFIX = 'x';
+var SUB_COMPONENT_COUNTER = 0;
+var DEFAULT_HOOKS = (0, _object.toObject)(['mount', 'update', 'remove'], function () {
+  return function () {};
+});
+
+function gatherBindingsFromMarkup(componentHTMLMarkup, component, firstTime) {
+  if (firstTime) {
+    SUB_COMPONENT_COUNTER = 0;
+  }
+
+  (0, _dom.walkNodes)(componentHTMLMarkup, function (HTMLNode) {
+    var bindingOpts = inspectNode(HTMLNode, component.subComponents);
+
+    if (!bindingOpts) {
+      return;
+    }
+
+    var binding = (0, _State.createBinding)(bindingOpts.name, component, HTMLNode);
+
+    if (bindingOpts.isComponent) {
+      setSubComponent(binding, bindingOpts);
+      HTMLNode.classList.add(_attributes2.default.PREFIX + binding.id);
+    }
+
+    component.bindings[binding.name] = binding;
+    binding.markup.classList.add(_attributes2.default.PREFIX + binding.id, component.name + '-' + binding.name);
+
+    if (bindingOpts.isList) {
+      var itemNode = HTMLNode.children[0];
+      (0, _State.modifyToListBinding)(binding, itemNode);
+      var tagName = getTagName(itemNode);
+
+      if (component.subComponents[tagName]) {
+        setSubComponent(binding.listItem, prepareComponentOpts(tagName, component.subComponents[tagName]));
+        return -1;
+      }
+
+      gatherBindingsFromMarkup(itemNode, binding.listItem);
+      return -1;
+    }
+  });
+
+  return component;
+}
+
+function setSubComponent(componentBinding, subComponentOpts) {
+  var stateNames = Object.assign(componentBinding.stateNames, subComponentOpts.component.stateNames);
+  var stateId = subComponentOpts.stateName + SUB_COMPONENT_PREFIX + SUB_COMPONENT_COUNTER++;
+
+  if (!stateNames[subComponentOpts.stateName]) {
+    stateId = subComponentOpts.stateName;
+    componentBinding.stateNames[stateId] = true;
+  }
+
+  (0, _copy2.default)(componentBinding, subComponentOpts.component);
+
+  return Object.assign(componentBinding, {
+    id: stateId,
+    stateId: stateId,
+    name: stateId,
+    stateName: subComponentOpts.stateName,
+    statePath: componentBinding.statePath.concat(stateId),
+    markup: subComponentOpts.component.markup.cloneNode(true),
+    isComponent: true,
+    stateNames: stateNames,
+    _links: Object.assign({}, subComponentOpts.links),
+    outerNames: Object.assign({}, subComponentOpts.revLinks)
+  });
+}
+
+function prepareBindings(component, currentStateId, parentComponent) {
+  var componentWrapper = document.createElement('div');
+  component.markup.setAttribute(_attributes2.default.BINDING_ID, shortenBindingId(currentStateId + _attributes2.default.STATE_DELIMITER + _attributes2.default.SELF));
+  componentWrapper.appendChild(component.markup);
+  component.statePath = parentComponent.statePath.concat(component.stateId);
+  component.stateNames = parentComponent.stateNames;
+
+  var subComponents = [];
+
+  (0, _object.forEach)(component.bindings, function (binding, bindingName) {
+    var oldBindingId = binding.id;
+    var newBindingId = currentStateId + _attributes2.default.STATE_DELIMITER + bindingName;
+    var shortId = shortenBindingId(newBindingId);
+
+    if (binding.markup) {
+      var bindingNode = componentWrapper.querySelector('.' + _attributes2.default.PREFIX + oldBindingId);
+      bindingNode.setAttribute(_attributes2.default.BINDING_ID, shortId);
+      bindingNode.classList.remove(_attributes2.default.PREFIX + oldBindingId);
+      bindingNode.classList.add(_attributes2.default.PREFIX + newBindingId);
+    }
+
+    Object.assign(binding, {
+      statePath: component.statePath.slice(),
+      hooks: Object.assign({}, DEFAULT_HOOKS, binding.hooks),
+      id: newBindingId,
+      shortId: shortId
+    });
+
+    prepareReactiveFuncs(binding, component);
+
+    if (binding.isList) {
+      binding.statePath.push(bindingName);
+      binding.stateNames = component.stateNames;
+      binding.styles = parentComponent.styles;
+
+      prepareBindings(binding.listItem, newBindingId + _attributes2.default.STATE_DELIMITER + _attributes2.default.ITEM + binding.listItem.name, binding);
+      return;
+    }
+
+    if (binding.isComponent) {
+      subComponents.push(binding);
+    }
+  });
+
+  setupComponentsLinks(component, parentComponent);
+  component.template = component.markup.cloneNode(true);
+
+  Object.assign(parentComponent.styles, component.styles);
+
+  subComponents.forEach(function (subComponent) {
+    prepareBindings(subComponent, currentStateId + _attributes2.default.STATE_DELIMITER + subComponent.stateId, component);
+  });
+}
+
+function prepareReactiveFuncs(binding, componentData) {
+  _index.VALUE_TYPES.forEach(function (type) {
+    var reactiveFunc = binding[type];
+    if (!reactiveFunc) {
+      return;
+    }
+
+    binding.evaluate[type] = prepareReactiveFunc(binding, type, reactiveFunc, componentData);
+  });
+}
+
+function prepareReactiveFunc(binding, type, reactiveFunc, componentData) {
+  var dependenciesNames = getDependenciesNames(reactiveFunc);
+
+  dependenciesNames.forEach(function (dependencyName) {
+    if ((0, _checkers.isEmpty)(componentData.bindings[dependencyName])) {
+      componentData.bindings[dependencyName] = (0, _State.createBinding)(dependencyName, componentData);
+    }
+
+    componentData.bindings[dependencyName].dependants[binding.name + ':' + type] = { name: binding.name, type: type };
+  });
+
+  return function (values, componentInterface) {
+    return reactiveFunc.call(null, values, componentInterface);
+  };
+}
+
+function getDependenciesNames(func) {
+  var funcParams = getParamNames(func);
+  var valuesObjRegExp = new RegExp('\\' + funcParams[0] + '\\.(\\D[^\\s\\W]+)', 'g');
+  var dependenciesNames = [];
+  var funcStr = func.toString();
+  var dependencyName = void 0;
+  while (dependencyName = valuesObjRegExp.exec(funcStr)) {
+    dependenciesNames.push(dependencyName[1]);
+  }
+  return dependenciesNames;
+}
+
+function getParamNames(func) {
+  var funcStrWithoutComments = func.toString().replace(_regexp2.default.STRIP_COMMENTS, '');
+  var paramsStr = funcStrWithoutComments.slice(funcStrWithoutComments.indexOf('(') + 1, funcStrWithoutComments.indexOf(')'));
+  return paramsStr.match(_regexp2.default.ARGUMENT_NAMES) || [];
+}
+
+function setupComponentsLinks(component, parentComponent) {
+  Object.assign(parentComponent.links, (0, _object.map)(component.outerNames, function (k) {
+    return { link: k, component: component.stateId };
+  }));
+}
+
+function inspectNode(el) {
+  var subComponents = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+  var tagName = getTagName(el);
+
+  if (!tagName) {
+    return null;
+  }
+
+  var subComponentOpts = subComponents[tagName];
+
+  if (subComponentOpts) {
+    return prepareComponentOpts(tagName, subComponentOpts);
+  }
+
+  var name = el.getAttribute(_attributes2.default.TEMPLATE_BINDING);
+  el.removeAttribute(_attributes2.default.TEMPLATE_BINDING);
+
+  if (name) {
+    return { name: name.trim() };
+  }
+
+  name = el.getAttribute(_attributes2.default.TEMPLATE_LIST_BINDING);
+  el.removeAttribute(_attributes2.default.TEMPLATE_LIST_BINDING);
+
+  if (name) {
+    return { name: name.trim(), isList: true };
+  }
+}
+
+function getTagName(el) {
+  return el.tagName && (0, _common.toCamelCase)(el.tagName.toLowerCase());
+}
+
+function prepareComponentOpts(name, obj) {
+  return {
+    component: obj[0],
+    links: obj[1],
+    revLinks: obj[1] ? (0, _object.fullMap)(obj[1], function (k, v) {
+      return [v, k];
+    }) : {},
+    stateName: name,
+    name: name,
+    isComponent: true
+  };
+}
+
+function shortenBindingId(id) {
+  return id.split(_attributes2.default.STATE_DELIMITER).map(function (el) {
+    return (0, _common.getShortName)(el);
+  }).join(_attributes2.default.STATE_DELIMITER);
 }
 
 /***/ }),
@@ -1436,7 +1431,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.renderChanges = exports.createAndAppendStyles = undefined;
 
-var _attributes = __webpack_require__(/*! ./globals/attributes */ "./src/globals/attributes.js");
+var _attributes = __webpack_require__(/*! ./values/attributes */ "./src/values/attributes.js");
 
 var _attributes2 = _interopRequireDefault(_attributes);
 
@@ -1516,12 +1511,12 @@ function drawComponent(values, statePath) {
   itemMarkup.setAttribute(_attributes2.default.COMPONENT_TYPE, component.isListItem ? _attributes2.default.ITEM : _attributes2.default.COMPONENT);
 
   (0, _object.forEach)(render, function (renderFunc, renderType) {
-    if (component.state[_attributes2.default.SELF][renderType]) {
+    if (component.bindings[_attributes2.default.SELF][renderType]) {
       renderFunc({ markup: itemMarkup }, values[_attributes2.default.SELF][renderType]);
     }
   });
 
-  (0, _object.forEach)(component.state, function (binding, bindingName) {
+  (0, _object.forEach)(component.bindings, function (binding, bindingName) {
     if (!binding.markup) {
       return;
     }
@@ -1567,7 +1562,7 @@ function updateComponent(component, values, statePath, changes) {
       return;
     }
 
-    var binding = component.state[bindingName];
+    var binding = component.bindings[bindingName];
     var statePathToBinding = statePath.concat(bindingName);
 
     if (binding.isComponent || binding.isList) {
@@ -1770,10 +1765,10 @@ exports.default = BindingNotExistsError;
 
 /***/ }),
 
-/***/ "./src/errors/ComponentRedefineError.js":
-/*!**********************************************!*\
-  !*** ./src/errors/ComponentRedefineError.js ***!
-  \**********************************************/
+/***/ "./src/errors/ComponentLookupError.js":
+/*!********************************************!*\
+  !*** ./src/errors/ComponentLookupError.js ***!
+  \********************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -1783,6 +1778,8 @@ exports.default = BindingNotExistsError;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+
+var _checkers = __webpack_require__(/*! ../helpers/checkers */ "./src/helpers/checkers.js");
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -1790,29 +1787,36 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var ComponentRedefineError = function (_Error) {
-  _inherits(ComponentRedefineError, _Error);
+var ComponentLookupError = function (_Error) {
+  _inherits(ComponentLookupError, _Error);
 
-  function ComponentRedefineError(name) {
-    _classCallCheck(this, ComponentRedefineError);
+  function ComponentLookupError(level, path) {
+    _classCallCheck(this, ComponentLookupError);
 
-    var _this = _possibleConstructorReturn(this, (ComponentRedefineError.__proto__ || Object.getPrototypeOf(ComponentRedefineError)).call(this));
+    var _this = _possibleConstructorReturn(this, (ComponentLookupError.__proto__ || Object.getPrototypeOf(ComponentLookupError)).call(this));
 
-    _this.message = "Trying to redefine existing component: '" + name + "'";
+    var additionalInfo = void 0;
+    if ((0, _checkers.isNumber)(level)) {
+      additionalInfo = level + " exceeds the number of components in the chain";
+    } else {
+      additionalInfo = "'" + level + "' component doesn't exist in the chain";
+    }
+
+    _this.message = "Unable to reach the component. " + additionalInfo + " (" + path.join(' -> ') + ").";
     return _this;
   }
 
-  return ComponentRedefineError;
+  return ComponentLookupError;
 }(Error);
 
-exports.default = ComponentRedefineError;
+exports.default = ComponentLookupError;
 
 /***/ }),
 
-/***/ "./src/errors/ScopeNameCollisionError.js":
-/*!***********************************************!*\
-  !*** ./src/errors/ScopeNameCollisionError.js ***!
-  \***********************************************/
+/***/ "./src/errors/ForbiddenBindingNameError.js":
+/*!*************************************************!*\
+  !*** ./src/errors/ForbiddenBindingNameError.js ***!
+  \*************************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -1822,6 +1826,8 @@ exports.default = ComponentRedefineError;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+
+var _index = __webpack_require__(/*! ../values/index */ "./src/values/index.js");
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -1829,105 +1835,22 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var ScopeNameCollisionError = function (_Error) {
-  _inherits(ScopeNameCollisionError, _Error);
+var ForbiddenBindingNameError = function (_Error) {
+  _inherits(ForbiddenBindingNameError, _Error);
 
-  function ScopeNameCollisionError(name) {
-    _classCallCheck(this, ScopeNameCollisionError);
+  function ForbiddenBindingNameError(bindingName) {
+    _classCallCheck(this, ForbiddenBindingNameError);
 
-    var _this = _possibleConstructorReturn(this, (ScopeNameCollisionError.__proto__ || Object.getPrototypeOf(ScopeNameCollisionError)).call(this));
+    var _this = _possibleConstructorReturn(this, (ForbiddenBindingNameError.__proto__ || Object.getPrototypeOf(ForbiddenBindingNameError)).call(this));
 
-    _this.message = "Trying to assign a name '" + name + "' to a state that already exists in the chain.";
+    _this.message = "Can't declare a binding with the name '" + bindingName + "' because it's forbidden name.\nList of forbidden binding names: " + _index.VALUE_TYPES.join(', ');
     return _this;
   }
 
-  return ScopeNameCollisionError;
+  return ForbiddenBindingNameError;
 }(Error);
 
-exports.default = ScopeNameCollisionError;
-
-/***/ }),
-
-/***/ "./src/globals/attributes.js":
-/*!***********************************!*\
-  !*** ./src/globals/attributes.js ***!
-  \***********************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-var LIB_NAME = 'x';
-var ATTR_PREFIX = 'data-';
-var PREFIX = LIB_NAME + '-';
-var TEMPLATE_BINDING = PREFIX + 'b';
-var TEMPLATE_LIST_BINDING = PREFIX + 'lb';
-var BINDING_ID = ATTR_PREFIX + PREFIX + 'id';
-var STATE_PATH = PREFIX + 'spath';
-var TEMPLATE_PLACEMENT = PREFIX + 'el';
-var STATE_NAME = PREFIX + 'state-name';
-var SCOPE_PREFIX = 's';
-var ITEM_INDEX = ATTR_PREFIX + PREFIX + 'dx';
-var COMPONENT_TYPE = ATTR_PREFIX + PREFIX + 'tp';
-var ITEM_SUFFIX = 'i';
-var STATE_DELIMITER = '-';
-var SELF = '';
-var FULL_CHANGE = ' _full_change_ ';
-
-var BASE = '1';
-var COMPONENT = '2';
-var LIST = '3';
-var ITEM = '_item_';
-var COMPONENT_LIST = '5';
-
-exports.default = {
-  PREFIX: PREFIX,
-  TEMPLATE_BINDING: TEMPLATE_BINDING,
-  TEMPLATE_LIST_BINDING: TEMPLATE_LIST_BINDING,
-  BINDING_ID: BINDING_ID,
-  STATE_PATH: STATE_PATH,
-  TEMPLATE_PLACEMENT: TEMPLATE_PLACEMENT,
-  STATE_NAME: STATE_NAME,
-  SCOPE_PREFIX: SCOPE_PREFIX,
-  ITEM_INDEX: ITEM_INDEX,
-  COMPONENT_TYPE: COMPONENT_TYPE,
-  ITEM_SUFFIX: ITEM_SUFFIX,
-  STATE_DELIMITER: STATE_DELIMITER,
-  BASE: BASE,
-  COMPONENT: COMPONENT,
-  LIST: LIST,
-  ITEM: ITEM,
-  SELF: SELF,
-  FULL_CHANGE: FULL_CHANGE,
-  COMPONENT_LIST: COMPONENT_LIST
-};
-
-/***/ }),
-
-/***/ "./src/globals/regexp.js":
-/*!*******************************!*\
-  !*** ./src/globals/regexp.js ***!
-  \*******************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-var STRIP_COMMENTS = /(\/\/.*$)|(\/\*[\s\S]*?\*\/)|(\s*=[^,)]*(('(?:\\'|[^'\r\n])*')|("(?:\\"|[^"\r\n])*"))|(\s*=[^,)]*))/mg;
-var ARGUMENT_NAMES = /([^\s,]+)/g;
-
-exports.default = {
-  STRIP_COMMENTS: STRIP_COMMENTS,
-  ARGUMENT_NAMES: ARGUMENT_NAMES
-};
+exports.default = ForbiddenBindingNameError;
 
 /***/ }),
 
@@ -2056,7 +1979,7 @@ var NAMES = {
 };
 
 function getShortName(name) {
-  if (NAMES.real[name]) {
+  if (NAMES.real[name] > -1) {
     return NAMES.real[name];
   }
 
@@ -2202,7 +2125,7 @@ function copyArray(destination, source) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.emptyNode = exports.rewriteToNode = exports.insertBeforeNode = exports.removeNode = exports.walkNodes = exports.collectHTMLNodes = exports.cloneHTMLMarkup = exports.replaceNodes = undefined;
+exports.walkUpNodes = exports.emptyNode = exports.rewriteToNode = exports.insertBeforeNode = exports.removeNode = exports.walkNodes = exports.collectHTMLNodes = exports.cloneHTMLMarkup = exports.replaceNodes = undefined;
 
 var _checkers = __webpack_require__(/*! ./checkers */ "./src/helpers/checkers.js");
 
@@ -2214,6 +2137,7 @@ exports.removeNode = removeNode;
 exports.insertBeforeNode = insertBeforeNode;
 exports.rewriteToNode = rewriteToNode;
 exports.emptyNode = emptyNode;
+exports.walkUpNodes = walkUpNodes;
 
 
 function replaceNodes(original, replacement) {
@@ -2244,6 +2168,21 @@ function walkNodes(node, cb) {
   Array.prototype.slice.call(node.children).forEach(function (el) {
     return walkNodes(el, cb);
   });
+}
+
+function walkUpNodes(el, stopCondition, cb) {
+  var curEl = el;
+
+  while (!stopCondition(curEl)) {
+    if (curEl.tagName === 'BODY') {
+      return curEl;
+    }
+
+    cb && cb(curEl);
+    curEl = curEl.parentNode;
+  }
+
+  return curEl;
 }
 
 function collectHTMLNodes(root, isWanted) {
@@ -2522,24 +2461,304 @@ function toObject(arr, val) {
 
 /***/ }),
 
-/***/ "./src/main.js":
-/*!*********************!*\
-  !*** ./src/main.js ***!
-  \*********************/
+/***/ "./src/prepareSettings.js":
+/*!********************************!*\
+  !*** ./src/prepareSettings.js ***!
+  \********************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var _Definition = __webpack_require__(/*! ./Definition */ "./src/Definition.js");
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.prepareStyles = exports.prepareBindingsSettings = exports.prepareBindingSettings = undefined;
 
-var _Production = __webpack_require__(/*! ./Production */ "./src/Production.js");
+var _object = __webpack_require__(/*! ./helpers/object */ "./src/helpers/object.js");
 
-module.exports = {
-  define: _Definition.define,
-  apply: _Production.apply
+var _State = __webpack_require__(/*! ./State */ "./src/State.js");
+
+var _shortnames = __webpack_require__(/*! ./values/shortnames */ "./src/values/shortnames.js");
+
+var _shortnames2 = _interopRequireDefault(_shortnames);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+exports.prepareBindingSettings = prepareBindingSettings;
+exports.prepareBindingsSettings = prepareBindingsSettings;
+exports.prepareStyles = prepareStyles;
+
+
+function prepareBindingsSettings(settings) {
+  var normalizedSettings = { bindings: {} };
+
+  (0, _object.forEach)(settings, function (value, key) {
+    var binding = (0, _State.createBinding)(key);
+    Object.assign(binding, prepareBindingSettings(value));
+    normalizedSettings.bindings[key] = binding;
+  });
+
+  return normalizedSettings;
+}
+
+function prepareBindingSettings(settings) {
+  var normalizedSettings = {};
+
+  (0, _object.forEach)(settings, function (value, key) {
+
+    for (var i = 0; i < _shortnames2.default.length; i++) {
+      var shortNames = _shortnames2.default[i];
+
+      if (shortNames.names[key]) {
+        if (!shortNames.group) {
+          normalizedSettings[shortNames.names[key]] = value;
+          return;
+        }
+
+        if (!normalizedSettings[shortNames.group]) {
+          normalizedSettings[shortNames.group] = {};
+        }
+
+        normalizedSettings[shortNames.group][shortNames.names[key]] = value;
+        return;
+      }
+    }
+
+    normalizedSettings[key] = value;
+  });
+
+  return normalizedSettings;
+}
+
+function prepareStyles(styleArg, component) {
+  return (0, _object.mapKeys)(styleArg, function (key) {
+    return key.split(',').map(function (selector) {
+      return selector.trim();
+    }).map(function (selector) {
+
+      var className = '.' + component.name;
+
+      if (selector) {
+        var mainSelector = selector.split(' ')[0].split('::')[0].split(':')[0];
+        var isBinding = component.bindings[mainSelector] && !!mainSelector;
+        var space = selector.startsWith(':') ? '' : ' ';
+        var prefix = isBinding ? className + '-' : '';
+        className += space + prefix + selector;
+      }
+
+      return className;
+    }).join(',');
+  });
+}
+
+/***/ }),
+
+/***/ "./src/values/attributes.js":
+/*!**********************************!*\
+  !*** ./src/values/attributes.js ***!
+  \**********************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+var LIB_NAME = 'x';
+var ATTR_PREFIX = 'data-';
+var PREFIX = LIB_NAME + '-';
+var TEMPLATE_BINDING = PREFIX + 'b';
+var TEMPLATE_LIST_BINDING = PREFIX + 'lb';
+var BINDING_ID = ATTR_PREFIX + PREFIX + 'id';
+var COMPONENT_ID = ATTR_PREFIX + PREFIX + 'cid';
+var ITEM_INDEX = ATTR_PREFIX + PREFIX + 'dx';
+var COMPONENT_TYPE = ATTR_PREFIX + PREFIX + 'tp';
+var ITEM_SUFFIX = 'i';
+var STATE_DELIMITER = '-';
+var SELF = '';
+var FULL_CHANGE = ' _full_change_ ';
+
+var BASE = '1';
+var COMPONENT = '2';
+var LIST = '3';
+var ITEM = '_item_';
+var COMPONENT_LIST = '5';
+
+exports.default = {
+  PREFIX: PREFIX,
+  TEMPLATE_BINDING: TEMPLATE_BINDING,
+  TEMPLATE_LIST_BINDING: TEMPLATE_LIST_BINDING,
+  BINDING_ID: BINDING_ID,
+  COMPONENT_ID: COMPONENT_ID,
+  ITEM_INDEX: ITEM_INDEX,
+  COMPONENT_TYPE: COMPONENT_TYPE,
+  ITEM_SUFFIX: ITEM_SUFFIX,
+  STATE_DELIMITER: STATE_DELIMITER,
+  BASE: BASE,
+  COMPONENT: COMPONENT,
+  LIST: LIST,
+  ITEM: ITEM,
+  SELF: SELF,
+  FULL_CHANGE: FULL_CHANGE,
+  COMPONENT_LIST: COMPONENT_LIST
 };
+
+/***/ }),
+
+/***/ "./src/values/index.js":
+/*!*****************************!*\
+  !*** ./src/values/index.js ***!
+  \*****************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.RESERVED_BINDING_NAMES = exports.BEHAVIOUR_TYPES = exports.VALUE_TYPES = undefined;
+
+var _attributes = __webpack_require__(/*! ./attributes */ "./src/values/attributes.js");
+
+var _attributes2 = _interopRequireDefault(_attributes);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var VALUE_TYPES = exports.VALUE_TYPES = ['style', 'class', 'value', 'attrs', 'html'];
+
+var BEHAVIOUR_TYPES = exports.BEHAVIOUR_TYPES = ['events', 'hooks', 'listItem'];
+
+var RESERVED_BINDING_NAMES = exports.RESERVED_BINDING_NAMES = VALUE_TYPES.concat(BEHAVIOUR_TYPES, _attributes2.default.SELF);
+
+/***/ }),
+
+/***/ "./src/values/regexp.js":
+/*!******************************!*\
+  !*** ./src/values/regexp.js ***!
+  \******************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+var STRIP_COMMENTS = /(\/\/.*$)|(\/\*[\s\S]*?\*\/)|(\s*=[^,)]*(('(?:\\'|[^'\r\n])*')|("(?:\\"|[^"\r\n])*"))|(\s*=[^,)]*))/mg;
+var ARGUMENT_NAMES = /([^\s,]+)/g;
+
+exports.default = {
+  STRIP_COMMENTS: STRIP_COMMENTS,
+  ARGUMENT_NAMES: ARGUMENT_NAMES
+};
+
+/***/ }),
+
+/***/ "./src/values/shortnames.js":
+/*!**********************************!*\
+  !*** ./src/values/shortnames.js ***!
+  \**********************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+var VALUE_SHORTNAMES = {
+  _s: 'style',
+  _c: 'class',
+  _v: 'value',
+  _a: 'attrs',
+  _h: 'html'
+};
+
+var EVENT_SHORTNAMES = {
+  _eab: 'abort',
+  _eld: 'load',
+  _eer: 'error',
+
+  _ef: 'focus',
+  _efi: 'focusin',
+  _efo: 'focusout',
+  _eb: 'blur',
+
+  _eas: 'animationstart',
+  _eac: 'animationcanceled',
+  _eae: 'animationend',
+  _eai: 'animationiteration',
+
+  _ets: 'transitionstart',
+  _etc: 'transitioncancel',
+  _ete: 'transitionend',
+  _etr: 'transitionrun',
+
+  _efr: 'reset',
+  _efs: 'submit',
+  _ech: 'change',
+
+  _ekd: 'keydown',
+  _ekp: 'keypress',
+  _eku: 'keyup',
+
+  _emc: 'click',
+  _emx: 'contextmenu',
+  _emd: 'mousedown',
+  _eme: 'mouseenter',
+  _eml: 'mouseleave',
+  _emm: 'mousemove',
+  _emo: 'mouseover',
+  _emt: 'mouseout',
+  _emu: 'mouseup',
+  _empc: 'pointerlockchange',
+  _empe: 'pointerlockerror',
+  _emw: 'wheel',
+  _ems: 'select',
+
+  _ed: 'drag',
+  _ede: 'dragend',
+  _edr: 'dragenter',
+  _eds: 'dragstart',
+  _edl: 'dragleave',
+  _edo: 'dragover',
+  _edd: 'drop',
+
+  _emcp: 'canplay',
+  _emcpt: 'canplaythrough',
+  _emdc: 'duractionchange',
+  _emet: 'emptied',
+  _emnd: 'ended',
+  _emld: 'loadeddata',
+  _emlmd: 'loadedmetadata',
+  _emps: 'pause',
+  _empl: 'play',
+  _emplg: 'playing',
+  _emrc: 'ratechange',
+  _emsk: 'seeked',
+  _emskg: 'seeking',
+  _emst: 'stalled',
+  _emsd: 'suspend',
+  _emtu: 'timeupdate',
+  _emvc: 'volumechange',
+  _emwt: 'waiting'
+};
+
+var HOOK_SHORTNAMES = {
+  _hu: 'update',
+  _hm: 'mount',
+  _hr: 'remove'
+};
+
+exports.default = [{ names: VALUE_SHORTNAMES }, { group: 'events', names: EVENT_SHORTNAMES }, { group: 'hooks', names: HOOK_SHORTNAMES }];
 
 /***/ })
 
@@ -3767,6 +3986,7 @@ const COLOR_SCHEMES = {
 const DEFAULT_SETTINGS = {
   PAGE_SIZE: 300,
   COLOR: 'grey',
+  VISITED_PAGES_LENGTH: 10,
 };
 
 const STATE = {
@@ -3795,6 +4015,7 @@ const SETTINGS = {
   saveSearch,
   removeSearch,
   isSearchSaved,
+  visitedPagesLength
 });
 
 function getTabState (tabId) {
@@ -3911,6 +4132,10 @@ async function removeSearch (searchString) {
   return allSearches;
 }
 
+function visitedPagesLength () {
+  return SETTINGS.VISITED_PAGES_LENGTH;
+}
+
 
 /***/ }),
 
@@ -4006,6 +4231,104 @@ function saveCallback (action, cb) {
 
 /***/ }),
 
+/***/ "./src/common/ui/components/history-tag/index.js":
+/*!*******************************************************!*\
+  !*** ./src/common/ui/components/history-tag/index.js ***!
+  \*******************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var couli__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! couli */ "./node_modules/couli/dist/couli.js");
+/* harmony import */ var couli__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(couli__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _styles__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./styles */ "./src/common/ui/components/history-tag/styles.js");
+
+
+
+/* harmony default export */ __webpack_exports__["default"] = ((Store) => couli__WEBPACK_IMPORTED_MODULE_0___default.a.define(`
+  <div>
+    <span x-b="name"></span>
+    <span x-b="removeButton"></span>
+  </div>
+`, {
+
+  name: { _emc: (e, ci) => Store.startSearch('!' + ci.get('name') ) },
+
+  removeButton: { _emc: (e, ci) => Store.removeTag( ci.get('name') ) },
+
+}, _styles__WEBPACK_IMPORTED_MODULE_1__["default"]));
+
+
+/***/ }),
+
+/***/ "./src/common/ui/components/history-tag/styles.js":
+/*!********************************************************!*\
+  !*** ./src/common/ui/components/history-tag/styles.js ***!
+  \********************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony default export */ __webpack_exports__["default"] = ({
+  '': {
+    boxSizing: 'border-box',
+    height: 27,
+    border: '1px solid black',
+    position: 'relative',
+    paddingLeft: 7,
+    paddingTop: 4,
+    paddingBottom: 4,
+    paddingRight: 31,
+    marginBottom: 9,
+    marginRight: 9,
+    fontSize: 14,
+  },
+
+  name: {
+    cursor: 'pointer'
+  },
+
+  removeButton: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    width: 21,
+    cursor: 'pointer',
+    borderLeft: '1px solid black',
+    background: 'rgba(255, 79, 43, 0.85)',
+  },
+
+  'removeButton:hover': {
+    background: 'rgb(255, 79, 43)'
+  },
+
+  'removeButton::before, removeButton::after': {
+    content: "''",
+    display: 'block',
+    position: 'absolute',
+    background: 'black',
+    width: 13,
+    height: 2,
+    top: 11,
+    left: 4,
+    cursor: 'pointer',
+  },
+
+  'removeButton::before': {
+    transform: 'rotate(45deg)',
+  },
+
+  'removeButton::after': {
+    transform: 'rotate(-45deg)',
+  },
+});
+
+
+/***/ }),
+
 /***/ "./src/options.js":
 /*!************************!*\
   !*** ./src/options.js ***!
@@ -4017,11 +4340,9 @@ function saveCallback (action, cb) {
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var couli__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! couli */ "./node_modules/couli/dist/couli.js");
 /* harmony import */ var couli__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(couli__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _options_ui_components_history_tag_index__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./options/ui/components/history-tag/index */ "./src/options/ui/components/history-tag/index.js");
-/* harmony import */ var _options_ui_components_search_query_index__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./options/ui/components/search-query/index */ "./src/options/ui/components/search-query/index.js");
-/* harmony import */ var _options_ui_components_options_index__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./options/ui/components/options/index */ "./src/options/ui/components/options/index.js");
-/* harmony import */ var _common_interaction__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./common/interaction */ "./src/common/interaction.js");
-/* harmony import */ var _options_reactions__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./options/reactions */ "./src/options/reactions.js");
+/* harmony import */ var _options_ui_components_options_index__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./options/ui/components/options/index */ "./src/options/ui/components/options/index.js");
+/* harmony import */ var _common_interaction__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./common/interaction */ "./src/common/interaction.js");
+/* harmony import */ var _options_reactions__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./options/reactions */ "./src/options/reactions.js");
 const browser = __webpack_require__(/*! webextension-polyfill */ "./node_modules/webextension-polyfill/dist/browser-polyfill.js");
 
 
@@ -4031,14 +4352,12 @@ const browser = __webpack_require__(/*! webextension-polyfill */ "./node_modules
 
 
 
-
-
-browser.runtime.onMessage.addListener((message) => Object(_common_interaction__WEBPACK_IMPORTED_MODULE_4__["onMessage"])(message, _options_reactions__WEBPACK_IMPORTED_MODULE_5__["default"]));
+browser.runtime.onMessage.addListener((message) => Object(_common_interaction__WEBPACK_IMPORTED_MODULE_2__["onMessage"])(message, _options_reactions__WEBPACK_IMPORTED_MODULE_3__["default"]));
 
 const options = document.createElement('options');
 document.body.appendChild(options);
 
-couli__WEBPACK_IMPORTED_MODULE_0___default.a.apply('body');
+couli__WEBPACK_IMPORTED_MODULE_0___default.a.apply(document.querySelector('#app'), _options_ui_components_options_index__WEBPACK_IMPORTED_MODULE_1__["default"]);
 
 
 /***/ }),
@@ -4140,8 +4459,6 @@ const store = {
   addListener,
   runListeners,
   removeTag,
-  handleInput,
-  removeTag,
   saveData,
   startSearch,
   removeSearch,
@@ -4151,6 +4468,7 @@ const store = {
 
 const FIELDS = {
   PAGE_SIZE: { validate: (val) => +val },
+  VISITED_PAGES_LENGTH: { validate: (val) => +val > -1 },
   COLOR: { validate: (val) => val }
 };
 
@@ -4171,6 +4489,7 @@ function getState () {
     allExistingTags: STATE.allExistingTags.map((tag) => ({ name: tag })),
     pageSize: STATE.PAGE_SIZE,
     selectedColor: STATE.COLOR,
+    visitedPagesLength: STATE.VISITED_PAGES_LENGTH,
     colorSchemes: Object.keys(_background_state__WEBPACK_IMPORTED_MODULE_0__["SETTINGS"].COLOR_SCHEMES).map((color) => ({ option: color })),
     savedSearches: STATE.savedSearches.map((query) => ({ query })),
   }
@@ -4185,7 +4504,7 @@ function saveSettings () {
   const NEW_SETTINGS = {};
 
   for (let key in FIELDS) {
-    const newValue = FIELDS[key].validate( STATE[key] ) || FIELDS[key].default;
+    const newValue = FIELDS[key].validate(STATE[key]) ? STATE[key] : FIELDS[key].default;
     NEW_SETTINGS[key] = newValue;
   }
 
@@ -4226,11 +4545,6 @@ function saveData ({ allExistingTags, savedSearches }) {
   runListeners();
 }
 
-function handleInput (str) {
-  STATE.newTagInput = str;
-  runListeners();
-}
-
 function startSearch (query) {
   _messages__WEBPACK_IMPORTED_MODULE_1__["default"].startSearch(query);
 }
@@ -4242,120 +4556,11 @@ function removeSearch (string) {
 
 /***/ }),
 
-/***/ "./src/options/ui/components/history-tag/index.js":
-/*!********************************************************!*\
-  !*** ./src/options/ui/components/history-tag/index.js ***!
-  \********************************************************/
-/*! no exports provided */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony import */ var couli__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! couli */ "./node_modules/couli/dist/couli.js");
-/* harmony import */ var couli__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(couli__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _store__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../../store */ "./src/options/store.js");
-/* harmony import */ var _styles__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./styles */ "./src/options/ui/components/history-tag/styles.js");
-
-
-
-
-
-couli__WEBPACK_IMPORTED_MODULE_0___default.a.define('history-tag', `
-  <div>
-    <span x-b="name"></span>
-    <span x-b="removeButton"></span>
-  </div>
-`, {
-
-  name: {
-    events: {
-      click: (e, el, ci) => _store__WEBPACK_IMPORTED_MODULE_1__["default"].startSearch('!' + ci.get('name')),
-    }
-  },
-
-  removeButton: {
-    events: {
-      click: (e, el, ci) => _store__WEBPACK_IMPORTED_MODULE_1__["default"].removeTag( ci.get('name') )
-    }
-  }
-
-}, _styles__WEBPACK_IMPORTED_MODULE_2__["default"]);
-
-
-/***/ }),
-
-/***/ "./src/options/ui/components/history-tag/styles.js":
-/*!*********************************************************!*\
-  !*** ./src/options/ui/components/history-tag/styles.js ***!
-  \*********************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony default export */ __webpack_exports__["default"] = ({
-  '': {
-    boxSizing: 'border-box',
-    height: 27,
-    border: '1px solid black',
-    position: 'relative',
-    paddingLeft: 7,
-    paddingTop: 4,
-    paddingBottom: 4,
-    paddingRight: 31,
-    marginBottom: 9,
-    marginRight: 9,
-    fontSize: 14,
-  },
-
-  name: {
-    cursor: 'pointer'
-  },
-
-  removeButton: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    bottom: 0,
-    width: 21,
-    cursor: 'pointer',
-    borderLeft: '1px solid black',
-    background: 'rgba(255, 79, 43, 0.85)',
-  },
-
-  'removeButton:hover': {
-    background: 'rgb(255, 79, 43)'
-  },
-
-  'removeButton::before, removeButton::after': {
-    content: "''",
-    display: 'block',
-    position: 'absolute',
-    background: 'black',
-    width: 13,
-    height: 2,
-    top: 11,
-    left: 4,
-    cursor: 'pointer',
-  },
-
-  'removeButton::before': {
-    transform: 'rotate(45deg)',
-  },
-
-  'removeButton::after': {
-    transform: 'rotate(-45deg)',
-  },
-});
-
-
-/***/ }),
-
 /***/ "./src/options/ui/components/options/index.js":
 /*!****************************************************!*\
   !*** ./src/options/ui/components/options/index.js ***!
   \****************************************************/
-/*! no exports provided */
+/*! exports provided: default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -4366,51 +4571,62 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _store__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../store */ "./src/options/store.js");
 /* harmony import */ var _markup_html__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./markup.html */ "./src/options/ui/components/options/markup.html");
 /* harmony import */ var _markup_html__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(_markup_html__WEBPACK_IMPORTED_MODULE_3__);
+/* harmony import */ var _search_query_index__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../search-query/index */ "./src/options/ui/components/search-query/index.js");
+/* harmony import */ var _common_ui_components_history_tag_index__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../../../../common/ui/components/history-tag/index */ "./src/common/ui/components/history-tag/index.js");
 
 
 
 
 
-couli__WEBPACK_IMPORTED_MODULE_0___default.a.define('options', _markup_html__WEBPACK_IMPORTED_MODULE_3___default.a, {
+
+
+
+
+const HistoryTag = Object(_common_ui_components_history_tag_index__WEBPACK_IMPORTED_MODULE_5__["default"])(_store__WEBPACK_IMPORTED_MODULE_2__["default"]);
+
+/* harmony default export */ __webpack_exports__["default"] = (couli__WEBPACK_IMPORTED_MODULE_0___default.a.define({
+  historyTag: [ HistoryTag ],
+  searchQuery: [ _search_query_index__WEBPACK_IMPORTED_MODULE_4__["default"] ]
+}, _markup_html__WEBPACK_IMPORTED_MODULE_3___default.a, {
 
   selectedColor: {},
 
-  pageSize: { events: { keyup: (e) => _store__WEBPACK_IMPORTED_MODULE_2__["default"].updateForm(e.target.value, 'PAGE_SIZE') } },
-
-  colorSchemes: {
-    events: { change: (e) => _store__WEBPACK_IMPORTED_MODULE_2__["default"].updateForm(e.target.value, 'COLOR') },
-
-    attrs: ($) => ({ value: $.selectedColor })
+  pageSize: {
+    _eku: (e) => _store__WEBPACK_IMPORTED_MODULE_2__["default"].updateForm(e.target.value, 'PAGE_SIZE'),
+    _ech: (e) => _store__WEBPACK_IMPORTED_MODULE_2__["default"].updateForm(e.target.value, 'PAGE_SIZE')
+  },
+  visitedPagesLength: {
+    _eku: (e) => _store__WEBPACK_IMPORTED_MODULE_2__["default"].updateForm(e.target.value, 'VISITED_PAGES_LENGTH'),
+    _ech: (e) => _store__WEBPACK_IMPORTED_MODULE_2__["default"].updateForm(e.target.value, 'VISITED_PAGES_LENGTH')
   },
 
-  saveButton: { events: { click: (e) => _store__WEBPACK_IMPORTED_MODULE_2__["default"].saveSettings() } },
-  defaultsButton: { events: { click: (e) => _store__WEBPACK_IMPORTED_MODULE_2__["default"].resetToDefaults() } },
+  colorSchemes: {
+    _ech: (e) => _store__WEBPACK_IMPORTED_MODULE_2__["default"].updateForm(e.target.value, 'COLOR'),
+
+    _a: ($) => ({ value: $.selectedColor })
+  },
+
+  saveButton: { _emc: (e) => _store__WEBPACK_IMPORTED_MODULE_2__["default"].saveSettings() },
+  defaultsButton: { _emc: (e) => _store__WEBPACK_IMPORTED_MODULE_2__["default"].resetToDefaults() },
+
+  tagsPanel: { _c: ($) => ({ hidden: !$.allExistingTags.length }) },
+  searchesPanel: { _c: ($) => ({ hidden: !$.savedSearches.length }) },
 
   '': {
-    hooks: {
-      mount: (el, data, ci) => {
-        ci.set(_store__WEBPACK_IMPORTED_MODULE_2__["default"].getState());
+    _hm: (el, ci) => {
+      ci.set(_store__WEBPACK_IMPORTED_MODULE_2__["default"].getState());
 
-        _store__WEBPACK_IMPORTED_MODULE_2__["default"].addListener((store) => {
-          const state = store.getState();
-          ci.markup('colorSchemes').value = state.selectedColor;
+      _store__WEBPACK_IMPORTED_MODULE_2__["default"].addListener((store) => {
+        const state = store.getState();
+        ci.markup('colorSchemes').value = state.selectedColor;     
+        ci.set(state);
+      });
 
-          switchElementVisibility(ci.markup('tagsPanel'), state.allExistingTags.length);
-          switchElementVisibility(ci.markup('searchesPanel'), state.savedSearches.length);
-          
-          ci.set(state);
-        });
-
-        _store__WEBPACK_IMPORTED_MODULE_2__["default"].loadData();
-      }
+      _store__WEBPACK_IMPORTED_MODULE_2__["default"].loadData();
     }
   }
 
-}, _styles__WEBPACK_IMPORTED_MODULE_1__["default"]);
-
-function switchElementVisibility (el, bool) {
-  bool ? el.classList.remove('hidden') : el.classList.add('hidden')
-}
+}, _styles__WEBPACK_IMPORTED_MODULE_1__["default"]));
 
 
 /***/ }),
@@ -4422,7 +4638,7 @@ function switchElementVisibility (el, bool) {
 /*! no static exports found */
 /***/ (function(module, exports) {
 
-module.exports = "<div>\r\n  <div class=\"floatLeft settingsPanel\">\r\n    <h3>Settings</h3>\r\n    <form class=\"form\">\r\n      <table>\r\n        <tbody>\r\n          <tr>\r\n            <td class=\"option-name\">Page size</td>\r\n            <td><input type='number' x-b=\"pageSize\" /></td>\r\n          </tr>\r\n          <tr>\r\n            <td class=\"option-name\">Color scheme</td>\r\n            <td>\r\n              <select x-lb=\"colorSchemes\" />\r\n                <option x-b=\"option\">\r\n              </select>\r\n            </td>\r\n          </tr>\r\n        </tbody>\r\n      </table>\r\n    </form>\r\n    <button x-b=\"saveButton\">Save</button>\r\n    <button x-b=\"defaultsButton\">Defaults</button>\r\n  </div>\r\n  <div x-b=\"tagsPanel\" class=\"hidden floatLeft\">\r\n    <h3>Tags</h3>\r\n    <div x-lb=\"allExistingTags\">\r\n      <history-tag>\r\n    </div>\r\n  </div>\r\n  <div x-b=\"searchesPanel\" class=\"hidden\">\r\n    <h3>Saved queries</h3>\r\n    <ul x-lb=\"savedSearches\">\r\n      <search-query>\r\n    </ul>\r\n  </div>\r\n</div>\r\n";
+module.exports = "<div>\r\n  <div class=\"floatLeft settingsPanel\">\r\n    <h3>Settings</h3>\r\n    <form class=\"form\">\r\n      <table>\r\n        <tbody>\r\n          <tr>\r\n            <td class=\"option-name\">Page size</td>\r\n            <td><input type='number' x-b=\"pageSize\" /></td>\r\n          </tr>\r\n          <tr>\r\n            <td class=\"option-name\">Color scheme</td>\r\n            <td>\r\n              <select x-lb=\"colorSchemes\" />\r\n                <option x-b=\"option\">\r\n              </select>\r\n            </td>\r\n          </tr>\r\n          <tr>\r\n            <td class=\"option-name\">Recently visited pages</td>\r\n            <td><input type='number' x-b=\"visitedPagesLength\" /></td>\r\n          </tr>\r\n        </tbody>\r\n      </table>\r\n    </form>\r\n    <button x-b=\"saveButton\">Save</button>\r\n    <button x-b=\"defaultsButton\">Defaults</button>\r\n  </div>\r\n  <div x-b=\"tagsPanel\" class=\"hidden floatLeft\">\r\n    <h3>Tags</h3>\r\n    <div x-lb=\"allExistingTags\">\r\n      <history-tag>\r\n    </div>\r\n  </div>\r\n  <div x-b=\"searchesPanel\" class=\"hidden\">\r\n    <h3>Saved queries</h3>\r\n    <ul x-lb=\"savedSearches\">\r\n      <search-query>\r\n    </ul>\r\n  </div>\r\n</div>\r\n";
 
 /***/ }),
 
@@ -4514,6 +4730,10 @@ __webpack_require__.r(__webpack_exports__);
   savedSearches: {
     listStyle: 'none',
     padding: 0,
+  },
+
+  button: {
+    cursor: 'pointer',
   }
 });
 
@@ -4524,7 +4744,7 @@ __webpack_require__.r(__webpack_exports__);
 /*!*********************************************************!*\
   !*** ./src/options/ui/components/search-query/index.js ***!
   \*********************************************************/
-/*! no exports provided */
+/*! exports provided: default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -4538,17 +4758,17 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-couli__WEBPACK_IMPORTED_MODULE_0___default.a.define('search-query', `
+/* harmony default export */ __webpack_exports__["default"] = (couli__WEBPACK_IMPORTED_MODULE_0___default.a.define(`
   <li>
     <button x-b="query"></button>
     <button x-b="removeButton">Remove</button>
   <li>
 `, {
 
-  query: { events: { click: (e, el, ci) => _store__WEBPACK_IMPORTED_MODULE_1__["default"].startSearch( ci.get('query') ) } },
-  removeButton: { events: { click: (e, el, ci) => _store__WEBPACK_IMPORTED_MODULE_1__["default"].removeSearch( ci.get('query') ) } }
+  query: { events: { click: (e, ci) => _store__WEBPACK_IMPORTED_MODULE_1__["default"].startSearch( ci.get('query') ) } },
+  removeButton: { events: { click: (e, ci) => _store__WEBPACK_IMPORTED_MODULE_1__["default"].removeSearch( ci.get('query') ) } }
 
-}, _styles__WEBPACK_IMPORTED_MODULE_2__["default"]);
+}, _styles__WEBPACK_IMPORTED_MODULE_2__["default"]));
 
 
 /***/ }),

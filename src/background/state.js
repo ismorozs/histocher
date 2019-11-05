@@ -14,6 +14,7 @@ const COLOR_SCHEMES = {
 const DEFAULT_SETTINGS = {
   PAGE_SIZE: 300,
   COLOR: 'grey',
+  VISITED_PAGES_LENGTH: 10,
 };
 
 const STATE = {
@@ -42,6 +43,7 @@ export default {
   saveSearch,
   removeSearch,
   isSearchSaved,
+  visitedPagesLength
 }
 
 function getTabState (tabId) {
@@ -156,4 +158,8 @@ async function removeSearch (searchString) {
   allSearches.splice( allSearches.indexOf(searchString), 1);
   await setSavedSearches(allSearches);
   return allSearches;
+}
+
+function visitedPagesLength () {
+  return SETTINGS.VISITED_PAGES_LENGTH;
 }

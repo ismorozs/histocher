@@ -23,8 +23,6 @@ const store = {
   addListener,
   runListeners,
   removeTag,
-  handleInput,
-  removeTag,
   saveData,
   startSearch,
   removeSearch,
@@ -34,6 +32,7 @@ export default store;
 
 const FIELDS = {
   PAGE_SIZE: { validate: (val) => +val },
+  VISITED_PAGES_LENGTH: { validate: (val) => +val > -1 },
   COLOR: { validate: (val) => val }
 };
 
@@ -54,6 +53,7 @@ function getState () {
     allExistingTags: STATE.allExistingTags.map((tag) => ({ name: tag })),
     pageSize: STATE.PAGE_SIZE,
     selectedColor: STATE.COLOR,
+    visitedPagesLength: STATE.VISITED_PAGES_LENGTH,
     colorSchemes: Object.keys(SETTINGS.COLOR_SCHEMES).map((color) => ({ option: color })),
     savedSearches: STATE.savedSearches.map((query) => ({ query })),
   }
@@ -68,7 +68,7 @@ function saveSettings () {
   const NEW_SETTINGS = {};
 
   for (let key in FIELDS) {
-    const newValue = FIELDS[key].validate( STATE[key] ) || FIELDS[key].default;
+    const newValue = FIELDS[key].validate(STATE[key]) ? STATE[key] : FIELDS[key].default;
     NEW_SETTINGS[key] = newValue;
   }
 
@@ -106,11 +106,6 @@ function saveData ({ allExistingTags, savedSearches }) {
     Object.assign(STATE, { savedSearches });
   }
 
-  runListeners();
-}
-
-function handleInput (str) {
-  STATE.newTagInput = str;
   runListeners();
 }
 

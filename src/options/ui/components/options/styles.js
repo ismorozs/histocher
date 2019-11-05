@@ -77,5 +77,9 @@ export default {
   savedSearches: {
     listStyle: 'none',
     padding: 0,
+  },
+
+  button: {
+    cursor: 'pointer',
   }
 };

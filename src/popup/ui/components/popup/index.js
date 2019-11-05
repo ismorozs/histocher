@@ -1,94 +1,81 @@
 import Couli from 'couli';
 import styles from './styles';
 import Store from '../../../store';
-import { SUGGESTIONS } from '../../../../common/constants';
+import createHistoryTag from '../../../../common/ui/components/history-tag/index';
+import markup from './markup.html';
+
+const HistoryTag = createHistoryTag(Store);
 
 const INITIAL_POPUP_POSITION = { top: 20, left: 'auto', right: 20 };
 
-Couli.define('history-searcher-popup',
-  `<div>
-    <div x-b="content">
-      <div x-lb="assignedTags" class="hidden">
-        <history-tag>
-      </div>
-      <div class="field">
-        <input x-b="newTagInput" /> <button x-b="addTagButton">Add tag</button>
-      </div>
-      <div class="field">
-        <select x-lb="allExistingTags">
-          <option x-b="option">
-        </select>
-      </div>
-      <button x-b="helpButton" class="link">${SUGGESTIONS.HELP}</button>
-      <button x-b="controlsButton" class="link">${SUGGESTIONS.SETTINGS}</button>
-    </div>
-  </div>`, {
+export default Couli.define({
+  historyTag: [ HistoryTag ]
+}, markup, {
 
   selected: {},
 
   newTagInput: {
-    events: {
-      keyup: (e) => {
-        e.stopPropagation();
-        if (e.keyCode === 13) {
-          Store.addNewTag(e.target.value);
-          return;
-        }
-
-        Store.handleInput(e.target.value);
+    _eku: (e) => {
+      e.stopPropagation();
+      if (e.keyCode === 13) {
+        Store.addNewTag(e.target.value);
+        return;
       }
+
+      Store.handleInput(e.target.value);
     }
   },
 
-  addTagButton: {
-    events: {
-      click: () => Store.addNewTag(),
-    }
-  },
+  addTagButton: { _emc: () => Store.addNewTag() },
 
   allExistingTags: {
 
-    events: {
-      change: (e, el, ci) => {
-        if (e.target.value) {
-          Store.addNewTag(e.target.value);
-          ci.set({ selected: e.target.value });
-        }
+    _ech: (e, ci) => {
+      if (e.target.value) {
+        Store.addNewTag(e.target.value);
+        ci.set({ selected: e.target.value });
       }
     },
 
-    attrs: ($) => ({ value: $.selected }),
+    _a: ($) => ({ value: $.selected }),
   },
 
-  controlsButton: {
-    events: {
-      click: () => Store.openSettings(),
+  assignedTagsSection: { _c: ($) => ({ hidden: !$.assignedTags.length }) },
+  visitedPagesSection: { _c: ($) => ({ hidden: !$.recentlyVisitedPages.length }) },
+
+  recentlyVisitedPages: { listItem: { bindings: {
+    url: {},
+    icon: {},
+    title: {
+      html: ($) => $.title || $.url,
+      events: { click: (e, ci) => Store.openPage( ci.get('url') ) },
+      attrs: ($) => ({ title: $.title + '\n' + $.url }),
+      style: ($) => ({ backgroundImage: 'url(' + $.icon + ')' }),
     }
+  }}},
+
+  controlsButton: {
+    _emc: () => Store.openPage('settings')
   },
 
   helpButton: {
-    events: {
-      click: () => Store.openHelp(),
-    }
+    _emc: () => Store.openPage('help')
   },
 
+  switchTagsButton: {
+    _emc: () => Store.switchTagPanel(),
+    _c: ($) => ({
+      rightTriangle: !$.tagPanelShown,
+      bottomTriangle: $.tagPanelShown
+    }),
+  },
+  tagsPanel: { _c: ($) => ({ hidden: !$.tagPanelShown }) },
+  tagPanelShown: {},
+
   '': {
-    hooks: {
-      mount: (el, data, ci) => {
-
-        Store.addListener((store) => {
-          const state = store.getState();
-          switchElementVisibility(ci.markup('assignedTags'), state.assignedTags.length);
-
-          ci.set(state);
-        });
-
-        Store.getData()
-      }
+    _hm: (el, ci) => {
+      Store.addListener((store) => ci.set( store.getState() ));
+      Store.getData();
     }
   }
 }, styles({ INITIAL_POPUP_POSITION }));
-
-function switchElementVisibility (el, bool) {
-  bool ? el.classList.remove('hidden') : el.classList.add('hidden')
-}

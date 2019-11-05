@@ -1343,11 +1343,11 @@ function onInputChanged (query, addSuggestions) {
 function onInputEntered (query) {
   switch (query) {
     case _common_constants__WEBPACK_IMPORTED_MODULE_1__["SUGGESTIONS"].SETTINGS:
-      _background_reactions__WEBPACK_IMPORTED_MODULE_2__["default"].openSettings();
+      _background_reactions__WEBPACK_IMPORTED_MODULE_2__["default"].openPage({ url: 'settings' });
       break;
 
     case _common_constants__WEBPACK_IMPORTED_MODULE_1__["SUGGESTIONS"].HELP:
-      _background_reactions__WEBPACK_IMPORTED_MODULE_2__["default"].openHelp();
+      _background_reactions__WEBPACK_IMPORTED_MODULE_2__["default"].openPage({ url: 'help' });
       break;
 
     default:
@@ -1362,25 +1362,31 @@ function onInputEntered (query) {
 /*!**********************************!*\
   !*** ./src/background/common.js ***!
   \**********************************/
-/*! exports provided: has, STRING_FILTERS */
+/*! exports provided: has, STRING_FILTERS, SPECIAL_PAGES */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "has", function() { return has; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "STRING_FILTERS", function() { return STRING_FILTERS; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "SPECIAL_PAGES", function() { return SPECIAL_PAGES; });
 function has (str, substr) {
   return str.indexOf(substr) >= 0;
 }
 
 const STRING_FILTERS = {
   '+url': (obj, str) => has(obj.url.toLowerCase(), str),
+  '+^url': (obj, str) => obj.url.toLowerCase().startsWith(str),
   '+title': (obj, str) => has(obj.title.toLowerCase(), str),
   '+urlortitle': (obj, str) => has(obj.title.toLowerCase(), str) || has(obj.url.toLowerCase(), str),
   '-url': (obj, str) => !has(obj.url.toLowerCase(), str),
   '-title': (obj, str) => !has(obj.title.toLowerCase(), str),
 };
 
+const SPECIAL_PAGES = {
+  'settings': '/options/options.html',
+  'help': '/help/help.html',
+};
 
 
 /***/ }),
@@ -1735,11 +1741,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _state__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./state */ "./src/background/state.js");
 /* harmony import */ var _search__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./search */ "./src/background/search.js");
 /* harmony import */ var _tags__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./tags */ "./src/background/tags.js");
-/* harmony import */ var _postProcess__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./postProcess */ "./src/background/postProcess.js");
-/* harmony import */ var _parse__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./parse */ "./src/background/parse.js");
-/* harmony import */ var _show__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./show */ "./src/background/show.js");
-/* harmony import */ var _messages__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./messages */ "./src/background/messages.js");
-/* harmony import */ var _common_interaction__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../common/interaction */ "./src/common/interaction.js");
+/* harmony import */ var _parse__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./parse */ "./src/background/parse.js");
+/* harmony import */ var _show__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./show */ "./src/background/show.js");
+/* harmony import */ var _messages__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./messages */ "./src/background/messages.js");
+/* harmony import */ var _common_interaction__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../common/interaction */ "./src/common/interaction.js");
+/* harmony import */ var _common__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./common */ "./src/background/common.js");
 const browser = __webpack_require__(/*! webextension-polyfill */ "./node_modules/webextension-polyfill/dist/browser-polyfill.js");
 
 
@@ -1764,19 +1770,16 @@ const browser = __webpack_require__(/*! webextension-polyfill */ "./node_modules
   saveSearchQuery,
   removeSearchQuery,
   startSearch,
-  openSettings,
-  openHelp,
+  openPage,
 });
 
 const CONTENT_PAGE_URL = '/history_page/index.html';
-const SETTINGS_PAGE_URL = '/options/options.html';
-const HELP_PAGE_URL = '/help/help.html';
 
 function movePage (message) {
   const tabState = _state__WEBPACK_IMPORTED_MODULE_0__["default"].getTabState(message.tabId);
   const newPageNum = increment(tabState.pageNum, message.inc, [0, tabState.totalPages - 1]);
   tabState.pageNum = newPageNum;
-  Object(_show__WEBPACK_IMPORTED_MODULE_5__["default"])(tabState);
+  Object(_show__WEBPACK_IMPORTED_MODULE_4__["default"])(tabState);
 }
 
 function increment (num, inc, range) {
@@ -1800,23 +1803,35 @@ function jumpToPage (message) {
   }
 
   tabState.pageNum = message.pageNum - 1;
-  Object(_show__WEBPACK_IMPORTED_MODULE_5__["default"])(tabState);
+  Object(_show__WEBPACK_IMPORTED_MODULE_4__["default"])(tabState);
 }
 
-async function getData () {
-  const pageData = await Object(_common_interaction__WEBPACK_IMPORTED_MODULE_7__["getCurrentTab"])();
+async function getData ({ forPopup }) {
+  const pageData = await Object(_common_interaction__WEBPACK_IMPORTED_MODULE_6__["getCurrentTab"])();
 
+  let recentlyVisitedPages = Promise.resolve();
+  let assignedTags = Promise.resolve();
+  let favIconUrl = null;
+  if (forPopup) {
+    const domain = extractDomain(pageData.url);
+    assignedTags = _tags__WEBPACK_IMPORTED_MODULE_2__["default"].getForPage(pageData);
+    recentlyVisitedPages = _search__WEBPACK_IMPORTED_MODULE_1__["default"].run(domain + ' +^url ' + domain, _state__WEBPACK_IMPORTED_MODULE_0__["default"].visitedPagesLength());
+    favIconUrl = pageData.favIconUrl;
+  };
+  
   return {
     allExistingTags: await _tags__WEBPACK_IMPORTED_MODULE_2__["default"].getAll(),
-    assignedTags: await _tags__WEBPACK_IMPORTED_MODULE_2__["default"].getForPage(pageData),
+    assignedTags: await assignedTags,
     savedSearches: await _state__WEBPACK_IMPORTED_MODULE_0__["default"].getSavedSearches(),
+    recentlyVisitedPages: await recentlyVisitedPages,
+    favIconUrl,
   }
 }
 
 async function addTagToPage ({ tag }) {
   const allExistingTags = await _tags__WEBPACK_IMPORTED_MODULE_2__["default"].create(tag);
 
-  const pageData = await Object(_common_interaction__WEBPACK_IMPORTED_MODULE_7__["getCurrentTab"])();
+  const pageData = await Object(_common_interaction__WEBPACK_IMPORTED_MODULE_6__["getCurrentTab"])();
   await _tags__WEBPACK_IMPORTED_MODULE_2__["default"].addToPage(tag, pageData);
   const tagsForPage = await _tags__WEBPACK_IMPORTED_MODULE_2__["default"].getForPage(pageData);
   
@@ -1824,7 +1839,7 @@ async function addTagToPage ({ tag }) {
 }
 
 async function removeTagFromPage ({ tag }) {
-  const pageData = await Object(_common_interaction__WEBPACK_IMPORTED_MODULE_7__["getCurrentTab"])();
+  const pageData = await Object(_common_interaction__WEBPACK_IMPORTED_MODULE_6__["getCurrentTab"])();
   await _tags__WEBPACK_IMPORTED_MODULE_2__["default"].removeFromPage(tag, pageData);
   return { assignedTags: await _tags__WEBPACK_IMPORTED_MODULE_2__["default"].getForPage(pageData) };
 }
@@ -1848,21 +1863,12 @@ function startSearch ({ query }) {
 
 function continueBuildingPage ({ tabId }) {
   const { query, tab } = _state__WEBPACK_IMPORTED_MODULE_0__["default"].getTabState(tabId);
-  const options = Object(_parse__WEBPACK_IMPORTED_MODULE_4__["default"])(query);
+  const options = Object(_parse__WEBPACK_IMPORTED_MODULE_3__["default"])(query);
 
-  let baseSearch;
-  if (options.tags.length) {
-    baseSearch = _search__WEBPACK_IMPORTED_MODULE_1__["default"].tags(options.tags);
-  } else {
-    const searchTerms = options.base.join(' ');
-    baseSearch = _search__WEBPACK_IMPORTED_MODULE_1__["default"].history(searchTerms, options.timeFrames);
-  }
-
-  baseSearch.then((results) => {
-    const handledResults = Object(_postProcess__WEBPACK_IMPORTED_MODULE_3__["default"])(results, options);
-    _state__WEBPACK_IMPORTED_MODULE_0__["default"].saveResults(tab.id, handledResults, 0).then(() => {
-      _state__WEBPACK_IMPORTED_MODULE_0__["default"].initTabState(tab.id, handledResults, options).then((tabState) => {
-        _messages__WEBPACK_IMPORTED_MODULE_6__["default"].setupClientPage(tabState).then(() => Object(_show__WEBPACK_IMPORTED_MODULE_5__["default"])(tabState));
+  _search__WEBPACK_IMPORTED_MODULE_1__["default"].run(options).then((results) => {
+    _state__WEBPACK_IMPORTED_MODULE_0__["default"].saveResults(tab.id, results, 0).then(() => {
+      _state__WEBPACK_IMPORTED_MODULE_0__["default"].initTabState(tab.id, results, options).then((tabState) => {
+        _messages__WEBPACK_IMPORTED_MODULE_5__["default"].setupClientPage(tabState).then(() => Object(_show__WEBPACK_IMPORTED_MODULE_4__["default"])(tabState));
       });
     });
   });
@@ -1876,12 +1882,12 @@ async function removeSearchQuery ({ query }) {
   return { savedSearches: await _state__WEBPACK_IMPORTED_MODULE_0__["default"].removeSearch(query), saved: false }; 
 }
 
-function openSettings () {
-  browser.tabs.create({ active: true, url: SETTINGS_PAGE_URL }).then((tab) => _state__WEBPACK_IMPORTED_MODULE_0__["default"].setTabState(tab.id, true));
+function openPage ({ url }){
+  browser.tabs.create({ active: true, url: _common__WEBPACK_IMPORTED_MODULE_7__["SPECIAL_PAGES"][url] || url });
 }
 
-function openHelp () {
-  browser.tabs.create({ active: true, url: HELP_PAGE_URL });
+function extractDomain (url) {
+  return url.split('/').slice(0, 3).join('/').split('#')[0].split('?')[0];
 }
 
 
@@ -1898,25 +1904,43 @@ function openHelp () {
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _tags__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./tags */ "./src/background/tags.js");
 /* harmony import */ var _state__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./state */ "./src/background/state.js");
+/* harmony import */ var _parse__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./parse */ "./src/background/parse.js");
+/* harmony import */ var _postProcess__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./postProcess */ "./src/background/postProcess.js");
 const browser = __webpack_require__(/*! webextension-polyfill */ "./node_modules/webextension-polyfill/dist/browser-polyfill.js");
 
 
 
 
+
+
+const MAX_RESULTS = 2147483647;
+
 /* harmony default export */ __webpack_exports__["default"] = ({
-  history: searchHistory,
-  tags: searchTags,
+  run,
   visitsForHistory: getVisitsForHistoryEntries,
 });
 
-function searchHistory (searchTerms, timeFrames) {
+function run (options, maxResults) {
+  if (typeof options === 'string') {
+    return run( Object(_parse__WEBPACK_IMPORTED_MODULE_2__["default"])(options) , maxResults);
+  }
+
+  if (options.tags.length) {
+    return searchTags(options.tags);
+  }
+  
+  return searchHistory(options).then((results) => Object(_postProcess__WEBPACK_IMPORTED_MODULE_3__["default"])(results, options).slice(0, maxResults || MAX_RESULTS));
+}
+
+function searchHistory ({ base, timeFrames }) {
+  const searchTerms = base.join(' ');
   const historyRequests = timeFrames.map((timeFrame) => makeHistoryRequest(searchTerms, timeFrame.start.getTime(), timeFrame.end.getTime()));
 
   return Promise.all(historyRequests).then(flattenArray);
 }
 
 function makeHistoryRequest (text, startTime, endTime) {
-  return browser.history.search({ text, startTime, endTime, maxResults: 2147483647 });
+  return browser.history.search({ text, startTime, endTime, maxResults: MAX_RESULTS });
 }
 
 function flattenArray (arr) {
@@ -2070,6 +2094,7 @@ const COLOR_SCHEMES = {
 const DEFAULT_SETTINGS = {
   PAGE_SIZE: 300,
   COLOR: 'grey',
+  VISITED_PAGES_LENGTH: 10,
 };
 
 const STATE = {
@@ -2098,6 +2123,7 @@ const SETTINGS = {
   saveSearch,
   removeSearch,
   isSearchSaved,
+  visitedPagesLength
 });
 
 function getTabState (tabId) {
@@ -2212,6 +2238,10 @@ async function removeSearch (searchString) {
   allSearches.splice( allSearches.indexOf(searchString), 1);
   await setSavedSearches(allSearches);
   return allSearches;
+}
+
+function visitedPagesLength () {
+  return SETTINGS.VISITED_PAGES_LENGTH;
 }
 
 

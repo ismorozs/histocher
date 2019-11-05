@@ -1,6 +1,5 @@
 export default (vars) => ({
   '': {
-    width: 300,
     background: 'white',
     border: '3px solid black',
     zIndex: '2147483647',
@@ -59,8 +58,8 @@ export default (vars) => ({
   },
 
   allExistingTags: {
-    marginTop: 13,
     width: '100%',
+    marginTop: 13,
     background: 'none',
     border: '1px solid black',
   },
@@ -72,6 +71,7 @@ export default (vars) => ({
   assignedTags: {
     display: 'flex',
     flexWrap: 'wrap',
+    marginTop: 12,
     marginBottom: 15,
     paddingBottom: 3,
     borderBottom: '1px solid black',
@@ -89,6 +89,79 @@ export default (vars) => ({
     marginLeft: 5,
     float: 'right',
     cursor: 'pointer',
-  }
+  },
+
+  recentlyVisitedPages: {
+    listStyle: 'none',
+    paddingLeft: 0,
+    marginTop: 7,
+    marginBottom: 23,
+    position: 'relative'
+  },
+
+  'recentlyVisitedPages:after': {
+    content: '""',
+    borderBottom: '1px solid black',
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: -12,
+  },
+
+  'recentlyVisitedPages li': {
+    padding: '3px 0 5px 23px',
+    cursor: 'pointer',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    backgroundRepeat: 'no-repeat',
+    backgroundSize: '15px 15px',
+    backgroundPosition: '0 5px',
+  },
+
+  'recentlyVisitedPages li:hover': {
+    backgroundColor: 'rgba(114, 123, 243, 0.1)'
+  },
+
+  h3: {
+    margin: '0 0 5px 0',
+    position: 'relative',
+  },
+
+  switchTagsButton: {
+    cursor: 'pointer',
+  },
+
+  'switchTagsButton:hover': {
+    color: 'rgb(114, 123, 243)'
+  },
+
+  'switchTagsButton::after': {
+    content: '""',
+    borderTop: '5px solid transparent',
+    borderLeft: '5px solid transparent',
+    borderBottom: '5px solid transparent',
+    borderRight: '5px solid transparent',
+    position: 'absolute',
+    top: 5,
+    left: 125
+  },
+
+  '.rightTriangle::after': {
+    borderLeftColor: 'black',
+  },
+
+  '.rightTriangle:hover::after': {
+    borderLeftColor: 'rgb(114, 123, 243)'
+  },
+
+  '.bottomTriangle::after': {
+    top: 8,
+    left: 124,
+    borderTopColor: 'black',
+  },
+
+  '.bottomTriangle:hover::after': {
+    borderTopColor: 'rgb(114, 123, 243)'
+  },
 
 });

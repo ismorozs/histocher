@@ -3,11 +3,11 @@ const browser = require('webextension-polyfill');
 import State from './state';
 import Search from './search';
 import Tag from './tags';
-import handleResults from './postProcess';
 import prepareOptions from './parse';
 import showResults from './show';
 import Message from './messages';
 import { getCurrentTab } from '../common/interaction';
+import { SPECIAL_PAGES } from './common';
 
 export default {
   movePage,
@@ -22,13 +22,10 @@ export default {
   saveSearchQuery,
   removeSearchQuery,
   startSearch,
-  openSettings,
-  openHelp,
+  openPage,
 };
 
 const CONTENT_PAGE_URL = '/history_page/index.html';
-const SETTINGS_PAGE_URL = '/options/options.html';
-const HELP_PAGE_URL = '/help/help.html';
 
 function movePage (message) {
   const tabState = State.getTabState(message.tabId);
@@ -61,13 +58,25 @@ function jumpToPage (message) {
   showResults(tabState);
 }
 
-async function getData () {
+async function getData ({ forPopup }) {
   const pageData = await getCurrentTab();
 
+  let recentlyVisitedPages = Promise.resolve();
+  let assignedTags = Promise.resolve();
+  let favIconUrl = null;
+  if (forPopup) {
+    const domain = extractDomain(pageData.url);
+    assignedTags = Tag.getForPage(pageData);
+    recentlyVisitedPages = Search.run(domain + ' +^url ' + domain, State.visitedPagesLength());
+    favIconUrl = pageData.favIconUrl;
+  };
+  
   return {
     allExistingTags: await Tag.getAll(),
-    assignedTags: await Tag.getForPage(pageData),
+    assignedTags: await assignedTags,
     savedSearches: await State.getSavedSearches(),
+    recentlyVisitedPages: await recentlyVisitedPages,
+    favIconUrl,
   }
 }
 
@@ -108,18 +117,9 @@ function continueBuildingPage ({ tabId }) {
   const { query, tab } = State.getTabState(tabId);
   const options = prepareOptions(query);
 
-  let baseSearch;
-  if (options.tags.length) {
-    baseSearch = Search.tags(options.tags);
-  } else {
-    const searchTerms = options.base.join(' ');
-    baseSearch = Search.history(searchTerms, options.timeFrames);
-  }
-
-  baseSearch.then((results) => {
-    const handledResults = handleResults(results, options);
-    State.saveResults(tab.id, handledResults, 0).then(() => {
-      State.initTabState(tab.id, handledResults, options).then((tabState) => {
+  Search.run(options).then((results) => {
+    State.saveResults(tab.id, results, 0).then(() => {
+      State.initTabState(tab.id, results, options).then((tabState) => {
         Message.setupClientPage(tabState).then(() => showResults(tabState));
       });
     });
@@ -134,10 +134,10 @@ async function removeSearchQuery ({ query }) {
   return { savedSearches: await State.removeSearch(query), saved: false }; 
 }
 
-function openSettings () {
-  browser.tabs.create({ active: true, url: SETTINGS_PAGE_URL }).then((tab) => State.setTabState(tab.id, true));
+function openPage ({ url }){
+  browser.tabs.create({ active: true, url: SPECIAL_PAGES[url] || url });
 }
 
-function openHelp () {
-  browser.tabs.create({ active: true, url: HELP_PAGE_URL });
+function extractDomain (url) {
+  return url.split('/').slice(0, 3).join('/').split('#')[0].split('?')[0];
 }
