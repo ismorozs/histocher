@@ -3,7 +3,7 @@ import { has, STRING_FILTERS } from './common';
 export default parseRawOptions;
 
 const EXTENSION_PREFIX = 'h';
-const SPACE_REGEXP = /\s+/g;
+export const SPACE_REGEXP = /\s+/g;
 const DEFAULT_START = new Date(0);
 const DEFAULT_END = new Date(9999, 11, 31);
 
@@ -29,10 +29,10 @@ const LAST_DAYS_OF_MONTHS = [31, [28, 29], 31, 30, 31, 30, 31, 31, 30, 31, 30, 3
 
 const SORT_TYPES = ['date', 'visit', 'url', 'title']
 const REAL_SORT_TYPES = []
-  .concat( SORT_TYPES.map((type) => '>' + type) )
-  .concat( SORT_TYPES.map((type) => '>' + type[0]) )
-  .concat( SORT_TYPES.map((type) => '<' + type) )
-  .concat( SORT_TYPES.map((type) => '<' + type[0]) );
+  .concat( SORT_TYPES.map((type) =>  type + '>') )
+  .concat( SORT_TYPES.map((type) =>  type[0] + '>') )
+  .concat( SORT_TYPES.map((type) =>  type + '<') )
+  .concat( SORT_TYPES.map((type) =>  type[0] + '<') );
 
 function parseRawOptions (rawString) {
   const rawOptions = rawString.split(SPACE_REGEXP).filter((str) => !!str);

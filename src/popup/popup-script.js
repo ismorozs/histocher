@@ -2,9 +2,9 @@ const browser = require('webextension-polyfill');
 
 import Couli from 'couli';
 
-import Popup from './popup/ui/components/popup/index';
+import Popup from './ui/components/popup/index';
 
-import { onMessage } from './common/interaction';
+import { onMessage } from '../common/interaction';
 
 window.__IS_BACKGROUND_SCRIPT__ = true;
 

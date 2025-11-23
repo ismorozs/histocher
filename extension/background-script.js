@@ -1,107 +1,22 @@
-/******/ (function(modules) { // webpackBootstrap
-/******/ 	// The module cache
-/******/ 	var installedModules = {};
-/******/
-/******/ 	// The require function
-/******/ 	function __webpack_require__(moduleId) {
-/******/
-/******/ 		// Check if module is in cache
-/******/ 		if(installedModules[moduleId]) {
-/******/ 			return installedModules[moduleId].exports;
-/******/ 		}
-/******/ 		// Create a new module (and put it into the cache)
-/******/ 		var module = installedModules[moduleId] = {
-/******/ 			i: moduleId,
-/******/ 			l: false,
-/******/ 			exports: {}
-/******/ 		};
-/******/
-/******/ 		// Execute the module function
-/******/ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
-/******/
-/******/ 		// Flag the module as loaded
-/******/ 		module.l = true;
-/******/
-/******/ 		// Return the exports of the module
-/******/ 		return module.exports;
-/******/ 	}
-/******/
-/******/
-/******/ 	// expose the modules object (__webpack_modules__)
-/******/ 	__webpack_require__.m = modules;
-/******/
-/******/ 	// expose the module cache
-/******/ 	__webpack_require__.c = installedModules;
-/******/
-/******/ 	// define getter function for harmony exports
-/******/ 	__webpack_require__.d = function(exports, name, getter) {
-/******/ 		if(!__webpack_require__.o(exports, name)) {
-/******/ 			Object.defineProperty(exports, name, { enumerable: true, get: getter });
-/******/ 		}
-/******/ 	};
-/******/
-/******/ 	// define __esModule on exports
-/******/ 	__webpack_require__.r = function(exports) {
-/******/ 		if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
-/******/ 			Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
-/******/ 		}
-/******/ 		Object.defineProperty(exports, '__esModule', { value: true });
-/******/ 	};
-/******/
-/******/ 	// create a fake namespace object
-/******/ 	// mode & 1: value is a module id, require it
-/******/ 	// mode & 2: merge all properties of value into the ns
-/******/ 	// mode & 4: return value when already ns object
-/******/ 	// mode & 8|1: behave like require
-/******/ 	__webpack_require__.t = function(value, mode) {
-/******/ 		if(mode & 1) value = __webpack_require__(value);
-/******/ 		if(mode & 8) return value;
-/******/ 		if((mode & 4) && typeof value === 'object' && value && value.__esModule) return value;
-/******/ 		var ns = Object.create(null);
-/******/ 		__webpack_require__.r(ns);
-/******/ 		Object.defineProperty(ns, 'default', { enumerable: true, value: value });
-/******/ 		if(mode & 2 && typeof value != 'string') for(var key in value) __webpack_require__.d(ns, key, function(key) { return value[key]; }.bind(null, key));
-/******/ 		return ns;
-/******/ 	};
-/******/
-/******/ 	// getDefaultExport function for compatibility with non-harmony modules
-/******/ 	__webpack_require__.n = function(module) {
-/******/ 		var getter = module && module.__esModule ?
-/******/ 			function getDefault() { return module['default']; } :
-/******/ 			function getModuleExports() { return module; };
-/******/ 		__webpack_require__.d(getter, 'a', getter);
-/******/ 		return getter;
-/******/ 	};
-/******/
-/******/ 	// Object.prototype.hasOwnProperty.call
-/******/ 	__webpack_require__.o = function(object, property) { return Object.prototype.hasOwnProperty.call(object, property); };
-/******/
-/******/ 	// __webpack_public_path__
-/******/ 	__webpack_require__.p = "";
-/******/
-/******/
-/******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = "./src/background-script.js");
-/******/ })
-/************************************************************************/
-/******/ ({
+/******/ (() => { // webpackBootstrap
+/******/ 	var __webpack_modules__ = ({
 
 /***/ "./node_modules/webextension-polyfill/dist/browser-polyfill.js":
 /*!*********************************************************************!*\
   !*** ./node_modules/webextension-polyfill/dist/browser-polyfill.js ***!
   \*********************************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
+/***/ (function(module, exports) {
 
 var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;(function (global, factory) {
   if (true) {
     !(__WEBPACK_AMD_DEFINE_ARRAY__ = [module], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory),
-				__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?
-				(__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__),
-				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-  } else { var mod; }
-})(this, function (module) {
-  /* webextension-polyfill - v0.4.0 - Wed Feb 06 2019 11:58:31 */
+		__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?
+		(__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__),
+		__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+  } else // removed by dead control flow
+{ var mod; }
+})(typeof globalThis !== "undefined" ? globalThis : typeof self !== "undefined" ? self : this, function (module) {
+  /* webextension-polyfill - v0.12.0 - Tue May 14 2024 18:01:29 */
   /* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
   /* vim: set sts=2 sw=2 et tw=80: */
   /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -109,9 +24,11 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
    * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
   "use strict";
 
-  if (typeof browser === "undefined" || Object.getPrototypeOf(browser) !== Object.prototype) {
+  if (!(globalThis.chrome && globalThis.chrome.runtime && globalThis.chrome.runtime.id)) {
+    throw new Error("This script should only be loaded in a browser extension.");
+  }
+  if (!(globalThis.browser && globalThis.browser.runtime && globalThis.browser.runtime.id)) {
     const CHROME_SEND_MESSAGE_CALLBACK_NO_RESPONSE_MESSAGE = "The message port closed before a response was received.";
-    const SEND_RESPONSE_DEPRECATION_WARNING = "Returning a Promise is the preferred way to send a reply from an onMessage/onMessageExternal listener, as the sendResponse will be removed from the specs (See https://developer.mozilla.org/docs/Mozilla/Add-ons/WebExtensions/API/runtime/onMessage)";
 
     // Wrapping the bulk of this polyfill in a one-time-use function is a minor
     // optimization for Firefox. Since Spidermonkey does not fully parse the
@@ -340,6 +257,12 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
               "minArgs": 3,
               "maxArgs": 3,
               "singleCallbackArg": true
+            },
+            "elements": {
+              "createSidebarPane": {
+                "minArgs": 1,
+                "maxArgs": 1
+              }
             }
           }
         },
@@ -546,10 +469,6 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
             "minArgs": 0,
             "maxArgs": 0
           },
-          "getBrowserInfo": {
-            "minArgs": 0,
-            "maxArgs": 0
-          },
           "getPlatformInfo": {
             "minArgs": 0,
             "maxArgs": 0
@@ -686,6 +605,14 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
             "minArgs": 0,
             "maxArgs": 1
           },
+          "goBack": {
+            "minArgs": 0,
+            "maxArgs": 1
+          },
+          "goForward": {
+            "minArgs": 0,
+            "maxArgs": 1
+          },
           "highlight": {
             "minArgs": 1,
             "maxArgs": 1
@@ -784,7 +711,6 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
           }
         }
       };
-
       if (Object.keys(apiMetadata).length === 0) {
         throw new Error("api-metadata.json has not been included in browser-polyfill");
       }
@@ -804,12 +730,10 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
           super(items);
           this.createItem = createItem;
         }
-
         get(key) {
           if (!this.has(key)) {
             this.set(key, this.createItem(key));
           }
-
           return super.get(key);
         }
       }
@@ -841,13 +765,17 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
        *        promise.
        * @param {function} promise.resolve
        *        The promise's resolution function.
-       * @param {function} promise.rejection
+       * @param {function} promise.reject
        *        The promise's rejection function.
        * @param {object} metadata
        *        Metadata about the wrapped method which has created the callback.
-       * @param {integer} metadata.maxResolvedArgs
-       *        The maximum number of arguments which may be passed to the
-       *        callback created by the wrapped async function.
+       * @param {boolean} metadata.singleCallbackArg
+       *        Whether or not the promise is resolved with only the first
+       *        argument of the callback, alternatively an array of all the
+       *        callback arguments is resolved. By default, if the callback
+       *        function is invoked with only a single argument, that will be
+       *        resolved to the promise, while all arguments will be resolved as
+       *        an array if multiple are given.
        *
        * @returns {function}
        *        The generated callback function.
@@ -855,7 +783,7 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
       const makeCallback = (promise, metadata) => {
         return (...callbackArgs) => {
           if (extensionAPIs.runtime.lastError) {
-            promise.reject(extensionAPIs.runtime.lastError);
+            promise.reject(new Error(extensionAPIs.runtime.lastError.message));
           } else if (metadata.singleCallbackArg || callbackArgs.length <= 1 && metadata.singleCallbackArg !== false) {
             promise.resolve(callbackArgs[0]);
           } else {
@@ -863,7 +791,6 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
           }
         };
       };
-
       const pluralizeArguments = numArgs => numArgs == 1 ? "argument" : "arguments";
 
       /**
@@ -881,9 +808,13 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
        *        The maximum number of arguments which may be passed to the
        *        function. If called with more than this number of arguments, the
        *        wrapper will raise an exception.
-       * @param {integer} metadata.maxResolvedArgs
-       *        The maximum number of arguments which may be passed to the
-       *        callback created by the wrapped async function.
+       * @param {boolean} metadata.singleCallbackArg
+       *        Whether or not the promise is resolved with only the first
+       *        argument of the callback, alternatively an array of all the
+       *        callback arguments is resolved. By default, if the callback
+       *        function is invoked with only a single argument, that will be
+       *        resolved to the promise, while all arguments will be resolved as
+       *        an array if multiple are given.
        *
        * @returns {function(object, ...*)}
        *       The generated wrapper function.
@@ -893,35 +824,37 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
           if (args.length < metadata.minArgs) {
             throw new Error(`Expected at least ${metadata.minArgs} ${pluralizeArguments(metadata.minArgs)} for ${name}(), got ${args.length}`);
           }
-
           if (args.length > metadata.maxArgs) {
             throw new Error(`Expected at most ${metadata.maxArgs} ${pluralizeArguments(metadata.maxArgs)} for ${name}(), got ${args.length}`);
           }
-
           return new Promise((resolve, reject) => {
             if (metadata.fallbackToNoCallback) {
               // This API method has currently no callback on Chrome, but it return a promise on Firefox,
               // and so the polyfill will try to call it with a callback first, and it will fallback
               // to not passing the callback if the first call fails.
               try {
-                target[name](...args, makeCallback({ resolve, reject }, metadata));
+                target[name](...args, makeCallback({
+                  resolve,
+                  reject
+                }, metadata));
               } catch (cbError) {
                 console.warn(`${name} API method doesn't seem to support the callback parameter, ` + "falling back to call it without a callback: ", cbError);
-
                 target[name](...args);
 
                 // Update the API method metadata, so that the next API calls will not try to
                 // use the unsupported callback anymore.
                 metadata.fallbackToNoCallback = false;
                 metadata.noCallback = true;
-
                 resolve();
               }
             } else if (metadata.noCallback) {
               target[name](...args);
               resolve();
             } else {
-              target[name](...args, makeCallback({ resolve, reject }, metadata));
+              target[name](...args, makeCallback({
+                resolve,
+                reject
+              }, metadata));
             }
           });
         };
@@ -953,7 +886,6 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
           }
         });
       };
-
       let hasOwnProperty = Function.call.bind(Object.prototype.hasOwnProperty);
 
       /**
@@ -985,18 +917,14 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
           has(proxyTarget, prop) {
             return prop in target || prop in cache;
           },
-
           get(proxyTarget, prop, receiver) {
             if (prop in cache) {
               return cache[prop];
             }
-
             if (!(prop in target)) {
               return undefined;
             }
-
             let value = target[prop];
-
             if (typeof value === "function") {
               // This is a method on the underlying object. Check if we need to do
               // any wrapping.
@@ -1019,6 +947,9 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
               // of. Create a sub-object wrapper for it with the appropriate child
               // metadata.
               value = wrapObject(value, wrappers[prop], metadata[prop]);
+            } else if (hasOwnProperty(metadata, "*")) {
+              // Wrap all properties in * namespace.
+              value = wrapObject(value, wrappers[prop], metadata["*"]);
             } else {
               // We don't need to do any wrapping for this property,
               // so just forward all access to the underlying object.
@@ -1032,14 +963,11 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
                   target[prop] = value;
                 }
               });
-
               return value;
             }
-
             cache[prop] = value;
             return value;
           },
-
           set(proxyTarget, prop, value, receiver) {
             if (prop in cache) {
               cache[prop] = value;
@@ -1048,11 +976,9 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
             }
             return true;
           },
-
           defineProperty(proxyTarget, prop, desc) {
             return Reflect.defineProperty(cache, prop, desc);
           },
-
           deleteProperty(proxyTarget, prop) {
             return Reflect.deleteProperty(cache, prop);
           }
@@ -1092,19 +1018,36 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
         addListener(target, listener, ...args) {
           target.addListener(wrapperMap.get(listener), ...args);
         },
-
         hasListener(target, listener) {
           return target.hasListener(wrapperMap.get(listener));
         },
-
         removeListener(target, listener) {
           target.removeListener(wrapperMap.get(listener));
         }
       });
+      const onRequestFinishedWrappers = new DefaultWeakMap(listener => {
+        if (typeof listener !== "function") {
+          return listener;
+        }
 
-      // Keep track if the deprecation warning has been logged at least once.
-      let loggedSendResponseDeprecationWarning = false;
-
+        /**
+         * Wraps an onRequestFinished listener function so that it will return a
+         * `getContent()` property which returns a `Promise` rather than using a
+         * callback API.
+         *
+         * @param {object} req
+         *        The HAR entry object representing the network request.
+         */
+        return function onRequestFinished(req) {
+          const wrappedReq = wrapObject(req, {} /* wrappers */, {
+            getContent: {
+              minArgs: 0,
+              maxArgs: 0
+            }
+          });
+          listener(wrappedReq);
+        };
+      });
       const onMessageWrappers = new DefaultWeakMap(listener => {
         if (typeof listener !== "function") {
           return listener;
@@ -1129,26 +1072,19 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
          */
         return function onMessage(message, sender, sendResponse) {
           let didCallSendResponse = false;
-
           let wrappedSendResponse;
           let sendResponsePromise = new Promise(resolve => {
             wrappedSendResponse = function (response) {
-              if (!loggedSendResponseDeprecationWarning) {
-                console.warn(SEND_RESPONSE_DEPRECATION_WARNING, new Error().stack);
-                loggedSendResponseDeprecationWarning = true;
-              }
               didCallSendResponse = true;
               resolve(response);
             };
           });
-
           let result;
           try {
             result = listener(message, sender, wrappedSendResponse);
           } catch (err) {
             result = Promise.reject(err);
           }
-
           const isResultThenable = result !== true && isThenable(result);
 
           // If the listener didn't returned true or a Promise, or called
@@ -1175,7 +1111,6 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
               } else {
                 message = "An unexpected error occurred";
               }
-
               sendResponse({
                 __mozWebExtensionPolyfillReject__: true,
                 message
@@ -1199,8 +1134,10 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
           return true;
         };
       });
-
-      const wrappedSendMessageCallback = ({ reject, resolve }, reply) => {
+      const wrappedSendMessageCallback = ({
+        reject,
+        resolve
+      }, reply) => {
         if (extensionAPIs.runtime.lastError) {
           // Detect when none of the listeners replied to the sendMessage call and resolve
           // the promise to undefined as in Firefox.
@@ -1208,7 +1145,7 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
           if (extensionAPIs.runtime.lastError.message === CHROME_SEND_MESSAGE_CALLBACK_NO_RESPONSE_MESSAGE) {
             resolve();
           } else {
-            reject(extensionAPIs.runtime.lastError);
+            reject(new Error(extensionAPIs.runtime.lastError.message));
           }
         } else if (reply && reply.__mozWebExtensionPolyfillReject__) {
           // Convert back the JSON representation of the error into
@@ -1218,52 +1155,68 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
           resolve(reply);
         }
       };
-
       const wrappedSendMessage = (name, metadata, apiNamespaceObj, ...args) => {
         if (args.length < metadata.minArgs) {
           throw new Error(`Expected at least ${metadata.minArgs} ${pluralizeArguments(metadata.minArgs)} for ${name}(), got ${args.length}`);
         }
-
         if (args.length > metadata.maxArgs) {
           throw new Error(`Expected at most ${metadata.maxArgs} ${pluralizeArguments(metadata.maxArgs)} for ${name}(), got ${args.length}`);
         }
-
         return new Promise((resolve, reject) => {
-          const wrappedCb = wrappedSendMessageCallback.bind(null, { resolve, reject });
+          const wrappedCb = wrappedSendMessageCallback.bind(null, {
+            resolve,
+            reject
+          });
           args.push(wrappedCb);
           apiNamespaceObj.sendMessage(...args);
         });
       };
-
       const staticWrappers = {
+        devtools: {
+          network: {
+            onRequestFinished: wrapEvent(onRequestFinishedWrappers)
+          }
+        },
         runtime: {
           onMessage: wrapEvent(onMessageWrappers),
           onMessageExternal: wrapEvent(onMessageWrappers),
-          sendMessage: wrappedSendMessage.bind(null, "sendMessage", { minArgs: 1, maxArgs: 3 })
+          sendMessage: wrappedSendMessage.bind(null, "sendMessage", {
+            minArgs: 1,
+            maxArgs: 3
+          })
         },
         tabs: {
-          sendMessage: wrappedSendMessage.bind(null, "sendMessage", { minArgs: 2, maxArgs: 3 })
+          sendMessage: wrappedSendMessage.bind(null, "sendMessage", {
+            minArgs: 2,
+            maxArgs: 3
+          })
         }
       };
       const settingMetadata = {
-        clear: { minArgs: 1, maxArgs: 1 },
-        get: { minArgs: 1, maxArgs: 1 },
-        set: { minArgs: 1, maxArgs: 1 }
+        clear: {
+          minArgs: 1,
+          maxArgs: 1
+        },
+        get: {
+          minArgs: 1,
+          maxArgs: 1
+        },
+        set: {
+          minArgs: 1,
+          maxArgs: 1
+        }
       };
       apiMetadata.privacy = {
         network: {
-          networkPredictionEnabled: settingMetadata,
-          webRTCIPHandlingPolicy: settingMetadata
+          "*": settingMetadata
         },
         services: {
-          passwordSavingEnabled: settingMetadata
+          "*": settingMetadata
         },
         websites: {
-          hyperlinkAuditingEnabled: settingMetadata,
-          referrersEnabled: settingMetadata
+          "*": settingMetadata
         }
       };
-
       return wrapObject(extensionAPIs, staticWrappers, apiMetadata);
     };
 
@@ -1271,89 +1224,10 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
     // `module` variable available.
     module.exports = wrapAPIs(chrome);
   } else {
-    module.exports = browser;
+    module.exports = globalThis.browser;
   }
 });
 //# sourceMappingURL=browser-polyfill.js.map
-
-
-/***/ }),
-
-/***/ "./src/background-script.js":
-/*!**********************************!*\
-  !*** ./src/background-script.js ***!
-  \**********************************/
-/*! no exports provided */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _common_interaction__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./common/interaction */ "./src/common/interaction.js");
-/* harmony import */ var _common_constants__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./common/constants */ "./src/common/constants.js");
-/* harmony import */ var _background_reactions__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./background/reactions */ "./src/background/reactions.js");
-/* harmony import */ var _background_messages__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./background/messages */ "./src/background/messages.js");
-/* harmony import */ var _background_state__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./background/state */ "./src/background/state.js");
-const browser = __webpack_require__(/*! webextension-polyfill */ "./node_modules/webextension-polyfill/dist/browser-polyfill.js");
-
-
-
-
-
-
-
-const FAVICON_SAVE_KEY = 'favicon';
-
-window.__IS_BACKGROUND_SCRIPT__ = true;
-
-browser.omnibox.setDefaultSuggestion({ description: _common_constants__WEBPACK_IMPORTED_MODULE_1__["SUGGESTIONS"].PREFIX + _common_constants__WEBPACK_IMPORTED_MODULE_1__["SUGGESTIONS"].DEFAULT });
-browser.omnibox.onInputEntered.addListener(onInputEntered);
-browser.omnibox.onInputChanged.addListener(onInputChanged);
-browser.runtime.onMessage.addListener((message) => Object(_common_interaction__WEBPACK_IMPORTED_MODULE_0__["onMessage"])(message, _background_reactions__WEBPACK_IMPORTED_MODULE_2__["default"]));
-browser.storage.onChanged.addListener(_background_state__WEBPACK_IMPORTED_MODULE_4__["default"].onSettingsChange);
-browser.tabs.onActivated.addListener(onTabActivated);
-browser.tabs.onRemoved.addListener(onTabRemoved);
-browser.tabs.onUpdated.addListener(onFaviconUpdated);
-
-_background_state__WEBPACK_IMPORTED_MODULE_4__["default"].loadSettings();
-
-function onFaviconUpdated (tabId, changedInfo, tab) {
-  const origin = tab.url.split('/').slice(0, 3).join('/')
-  browser.storage.local.set({ [origin + FAVICON_SAVE_KEY]: changedInfo.favIconUrl });
-}
-
-function onTabActivated ({ tabId }) {
-  if (_background_state__WEBPACK_IMPORTED_MODULE_4__["default"].getTabState(tabId)) {
-    _background_messages__WEBPACK_IMPORTED_MODULE_3__["default"].sendTagData({ tabId });
-  }
-}
-
-function onTabRemoved (tabId) {
-  if (_background_state__WEBPACK_IMPORTED_MODULE_4__["default"].getTabState(tabId)) {
-    _background_state__WEBPACK_IMPORTED_MODULE_4__["default"].removeTabState(tabId);
-  }
-}
-
-function onInputChanged (query, addSuggestions) {
-  addSuggestions([
-    { description: _common_constants__WEBPACK_IMPORTED_MODULE_1__["SUGGESTIONS"].PREFIX + _common_constants__WEBPACK_IMPORTED_MODULE_1__["SUGGESTIONS"].SETTINGS, content: _common_constants__WEBPACK_IMPORTED_MODULE_1__["SUGGESTIONS"].SETTINGS },
-    { description: _common_constants__WEBPACK_IMPORTED_MODULE_1__["SUGGESTIONS"].PREFIX + _common_constants__WEBPACK_IMPORTED_MODULE_1__["SUGGESTIONS"].HELP, content: _common_constants__WEBPACK_IMPORTED_MODULE_1__["SUGGESTIONS"].HELP },
-  ]);
-}
-
-function onInputEntered (query) {
-  switch (query) {
-    case _common_constants__WEBPACK_IMPORTED_MODULE_1__["SUGGESTIONS"].SETTINGS:
-      _background_reactions__WEBPACK_IMPORTED_MODULE_2__["default"].openPage({ url: 'settings' });
-      break;
-
-    case _common_constants__WEBPACK_IMPORTED_MODULE_1__["SUGGESTIONS"].HELP:
-      _background_reactions__WEBPACK_IMPORTED_MODULE_2__["default"].openPage({ url: 'help' });
-      break;
-
-    default:
-      _background_reactions__WEBPACK_IMPORTED_MODULE_2__["default"].startSearch({ query });
-  }
-}
 
 
 /***/ }),
@@ -1362,25 +1236,29 @@ function onInputEntered (query) {
 /*!**********************************!*\
   !*** ./src/background/common.js ***!
   \**********************************/
-/*! exports provided: has, STRING_FILTERS, SPECIAL_PAGES */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "has", function() { return has; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "STRING_FILTERS", function() { return STRING_FILTERS; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "SPECIAL_PAGES", function() { return SPECIAL_PAGES; });
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   SPECIAL_PAGES: () => (/* binding */ SPECIAL_PAGES),
+/* harmony export */   STRING_FILTERS: () => (/* binding */ STRING_FILTERS),
+/* harmony export */   has: () => (/* binding */ has)
+/* harmony export */ });
 function has (str, substr) {
   return str.indexOf(substr) >= 0;
 }
 
 const STRING_FILTERS = {
-  '+url': (obj, str) => has(obj.url.toLowerCase(), str),
-  '+^url': (obj, str) => obj.url.toLowerCase().startsWith(str),
-  '+title': (obj, str) => has(obj.title.toLowerCase(), str),
-  '+urlortitle': (obj, str) => has(obj.title.toLowerCase(), str) || has(obj.url.toLowerCase(), str),
-  '-url': (obj, str) => !has(obj.url.toLowerCase(), str),
-  '-title': (obj, str) => !has(obj.title.toLowerCase(), str),
+  "+url": (obj, str) => obj.url.toLowerCase().includes(str),
+  "+title": (obj, str) =>
+    obj.title !== null && obj.title.toLowerCase().includes(str),
+  "+urlortitle": (obj, str) =>
+    (obj.title !== null && obj.title.toLowerCase().includes(str)) ||
+    has(obj.url.toLowerCase(), str),
+  "-url": (obj, str) => !obj.url.toLowerCase().includes(str),
+  "-title": (obj, str) =>
+    obj.title !== null && !obj.title.toLowerCase().includes(str),
 };
 
 const SPECIAL_PAGES = {
@@ -1391,15 +1269,50 @@ const SPECIAL_PAGES = {
 
 /***/ }),
 
+/***/ "./src/background/context-menu.js":
+/*!****************************************!*\
+  !*** ./src/background/context-menu.js ***!
+  \****************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   onContextMenuClicked: () => (/* binding */ onContextMenuClicked),
+/* harmony export */   setupContextMenu: () => (/* binding */ setupContextMenu)
+/* harmony export */ });
+/* harmony import */ var _reactions__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./reactions */ "./src/background/reactions.js");
+const browser = __webpack_require__(/*! webextension-polyfill */ "./node_modules/webextension-polyfill/dist/browser-polyfill.js");
+
+
+
+async function setupContextMenu() {
+  await browser.contextMenus.removeAll();
+  browser.contextMenus.create({
+    id: "1",
+    title: "Search history",
+    contexts: ["all"],
+  });
+}
+
+function onContextMenuClicked(info) {
+  _reactions__WEBPACK_IMPORTED_MODULE_0__["default"].openPage({ url: "settings" });
+}
+
+
+/***/ }),
+
 /***/ "./src/background/messages.js":
 /*!************************************!*\
   !*** ./src/background/messages.js ***!
   \************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
 /* harmony import */ var _common_interaction__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../common/interaction */ "./src/common/interaction.js");
 /* harmony import */ var _state__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./state */ "./src/background/state.js");
 /* harmony import */ var _reactions__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./reactions */ "./src/background/reactions.js");
@@ -1407,7 +1320,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-/* harmony default export */ __webpack_exports__["default"] = ({
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
   switchPopup,
   sendTagData,
   buildPage,
@@ -1421,26 +1334,26 @@ async function switchPopup (tab) {
     return await initializePopup(tab);
   }
 
-  return Object(_common_interaction__WEBPACK_IMPORTED_MODULE_0__["sendMessage"])('popupState', { open: !tabState.popupOpen }).then(() => _state__WEBPACK_IMPORTED_MODULE_1__["default"].setPopupState(tab.id, !tabState.popupOpen));
+  return (0,_common_interaction__WEBPACK_IMPORTED_MODULE_0__.sendMessage)('popupState', { open: !tabState.popupOpen }).then(() => _state__WEBPACK_IMPORTED_MODULE_1__["default"].setPopupState(tab.id, !tabState.popupOpen));
 }
 
 async function initializePopup (tab) {
   return browser.tabs.executeScript({ file: '/page-script.js' })
     .then(() => _state__WEBPACK_IMPORTED_MODULE_1__["default"].setTabState(tab.id, { ...tab, popupOpen: true }))
-    .then(() => Object(_common_interaction__WEBPACK_IMPORTED_MODULE_0__["sendMessage"])('saveTabId', { tabId: tab.id }))
+    .then(() => (0,_common_interaction__WEBPACK_IMPORTED_MODULE_0__.sendMessage)('saveTabId', { tabId: tab.id }))
 }
 
 async function sendTagData ({ tabId }) {
   const data = await _reactions__WEBPACK_IMPORTED_MODULE_2__["default"].getData({ tabId });
-  Object(_common_interaction__WEBPACK_IMPORTED_MODULE_0__["sendMessage"])('getData', data);
+  (0,_common_interaction__WEBPACK_IMPORTED_MODULE_0__.sendMessage)('getData', data);
 }
 
-function buildPage ( tabId, list, pageNum) {
-  Object(_common_interaction__WEBPACK_IMPORTED_MODULE_0__["sendMessageToTab"])(tabId, 'buildPage', { list, pageNum });
+function buildPage ( tabId, list, pageNum, totalCount, scrollY) {
+  (0,_common_interaction__WEBPACK_IMPORTED_MODULE_0__.sendMessageToTab)(tabId, 'buildPage', { list, pageNum, totalCount, scrollY });
 }
 
 function setupClientPage (tabState) {
-  return Object(_common_interaction__WEBPACK_IMPORTED_MODULE_0__["sendMessageToTab"])(tabState.tabId, 'setupClientPage', tabState);
+  return (0,_common_interaction__WEBPACK_IMPORTED_MODULE_0__.sendMessageToTab)(tabState.tabId, 'setupClientPage', tabState);
 }
 
 
@@ -1450,15 +1363,18 @@ function setupClientPage (tabState) {
 /*!*********************************!*\
   !*** ./src/background/parse.js ***!
   \*********************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   SPACE_REGEXP: () => (/* binding */ SPACE_REGEXP),
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
 /* harmony import */ var _common__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./common */ "./src/background/common.js");
 
 
-/* harmony default export */ __webpack_exports__["default"] = (parseRawOptions);
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (parseRawOptions);
 
 const EXTENSION_PREFIX = 'h';
 const SPACE_REGEXP = /\s+/g;
@@ -1487,10 +1403,10 @@ const LAST_DAYS_OF_MONTHS = [31, [28, 29], 31, 30, 31, 30, 31, 31, 30, 31, 30, 3
 
 const SORT_TYPES = ['date', 'visit', 'url', 'title']
 const REAL_SORT_TYPES = []
-  .concat( SORT_TYPES.map((type) => '>' + type) )
-  .concat( SORT_TYPES.map((type) => '>' + type[0]) )
-  .concat( SORT_TYPES.map((type) => '<' + type) )
-  .concat( SORT_TYPES.map((type) => '<' + type[0]) );
+  .concat( SORT_TYPES.map((type) =>  type + '>') )
+  .concat( SORT_TYPES.map((type) =>  type[0] + '>') )
+  .concat( SORT_TYPES.map((type) =>  type + '<') )
+  .concat( SORT_TYPES.map((type) =>  type[0] + '<') );
 
 function parseRawOptions (rawString) {
   const rawOptions = rawString.split(SPACE_REGEXP).filter((str) => !!str);
@@ -1528,7 +1444,7 @@ function parseOptions (rawOptions, options, curOption) {
       continue;
     }
 
-    if (Object(_common__WEBPACK_IMPORTED_MODULE_0__["has"])(REAL_SORT_TYPES, word)) {
+    if ((0,_common__WEBPACK_IMPORTED_MODULE_0__.has)(REAL_SORT_TYPES, word)) {
       options.sort.push(word);
       continue;
     }
@@ -1538,7 +1454,7 @@ function parseOptions (rawOptions, options, curOption) {
       continue;
     }
 
-    if (_common__WEBPACK_IMPORTED_MODULE_0__["STRING_FILTERS"][word]) {
+    if (_common__WEBPACK_IMPORTED_MODULE_0__.STRING_FILTERS[word]) {
       if (!options[word]) {
         options[word] = [];
       }
@@ -1652,15 +1568,17 @@ function isTag (str) {
 /*!***************************************!*\
   !*** ./src/background/postProcess.js ***!
   \***************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
 /* harmony import */ var _common__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./common */ "./src/background/common.js");
 
 
-/* harmony default export */ __webpack_exports__["default"] = (postProcess);
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (postProcess);
 
 function postProcess (results, options) {
   const filteredResults = filterResults(results, options);
@@ -1671,10 +1589,10 @@ function postProcess (results, options) {
 function filterResults (results, options) {
 
   for (let key in options) {
-    if (_common__WEBPACK_IMPORTED_MODULE_0__["STRING_FILTERS"][key]) {
+    if (_common__WEBPACK_IMPORTED_MODULE_0__.STRING_FILTERS[key]) {
       const strings = options[key];
       strings.forEach((string) => {
-        results = results.filter((obj) => _common__WEBPACK_IMPORTED_MODULE_0__["STRING_FILTERS"][key](obj, string.toLowerCase()));
+        results = results.filter((obj) => _common__WEBPACK_IMPORTED_MODULE_0__.STRING_FILTERS[key](obj, string.toLowerCase()));
       });
     }
   }
@@ -1688,37 +1606,37 @@ function sortResults (results, sortRules) {
   sortRules.forEach((rule) => {
 
     switch (rule) {
-      case '>u':
-      case '>url':
-        orderedResults = orderedResults.sort((a, b) => a.url > b.url);
+      case 'u>':
+      case 'url>':
+        orderedResults.sort((a, b) => compareObjectStrings(a, b, "url"));
         break;
-      case '<u':
-      case '<url':
-        orderedResults = orderedResults.sort((a, b) => a.url < b.url);
+      case 'u<':
+      case 'url<':
+        orderedResults.sort((a, b) => compareObjectStrings(b, a, "url"));
         break;
-      case '>t':
-      case '>title':
-        orderedResults = orderedResults.sort((a, b) => a.title > b.title);
+      case 't>':
+      case 'title>':
+        orderedResults.sort((a, b) => compareObjectStrings(a, b, "title"));
         break;
-      case '<t':
-      case '<title':
-        orderedResults = orderedResults.sort((a, b) => a.title < b.title);
+      case 't<':
+      case 'title<':
+        orderedResults.sort((a, b) => compareObjectStrings(b, a, "title"));
         break;
-      case '>d':
-      case '>date':
-        orderedResults = orderedResults.sort((a, b) => a.lastVisitTime > b.lastVisitTime);
+      case 'd>':
+      case 'date>':
+        orderedResults.sort((a, b) => a.lastVisitTime - b.lastVisitTime);
         break;
-      case '<d':
-      case '<date':
-        orderedResults = orderedResults.sort((a, b) => a.lastVisitTime < b.lastVisitTime);
+      case 'd<':
+      case 'date<':
+        orderedResults.sort((a, b) => b.lastVisitTime - a.lastVisitTime);
         break;
-      case '>v':
-      case '>visit':
-        orderedResults = orderedResults.sort((a, b) => a.visitCount > b.visitCount);
+      case 'v>':
+      case 'visit>':
+        orderedResults.sort((a, b) => a.visitCount - b.visitCount);
         break;
-      case '<v':
-      case '<visit':
-        orderedResults = orderedResults.sort((a, b) => a.visitCount < b.visitCount);
+      case 'v<':
+      case 'visit<':
+        orderedResults.sort((a, b) => b.visitCount - a.visitCount);
         break;
     }
 
@@ -1727,17 +1645,24 @@ function sortResults (results, sortRules) {
   return orderedResults;
 }
 
+function compareObjectStrings (a, b, key) {
+  return a[key] > b[key] ? 1 : a[key] < b[key] ? -1 : 0;
+}
+
+
 /***/ }),
 
 /***/ "./src/background/reactions.js":
 /*!*************************************!*\
   !*** ./src/background/reactions.js ***!
   \*************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
 /* harmony import */ var _state__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./state */ "./src/background/state.js");
 /* harmony import */ var _search__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./search */ "./src/background/search.js");
 /* harmony import */ var _tags__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./tags */ "./src/background/tags.js");
@@ -1757,7 +1682,7 @@ const browser = __webpack_require__(/*! webextension-polyfill */ "./node_modules
 
 
 
-/* harmony default export */ __webpack_exports__["default"] = ({
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
   movePage,
   jumpToPage,
   getData,
@@ -1771,6 +1696,10 @@ const browser = __webpack_require__(/*! webextension-polyfill */ "./node_modules
   removeSearchQuery,
   startSearch,
   openPage,
+  historyPagePrepared,
+  removeAllEntries,
+  removeOneEntry,
+  getSavedSearches,
 });
 
 const CONTENT_PAGE_URL = '/history_page/index.html';
@@ -1779,7 +1708,7 @@ function movePage (message) {
   const tabState = _state__WEBPACK_IMPORTED_MODULE_0__["default"].getTabState(message.tabId);
   const newPageNum = increment(tabState.pageNum, message.inc, [0, tabState.totalPages - 1]);
   tabState.pageNum = newPageNum;
-  Object(_show__WEBPACK_IMPORTED_MODULE_4__["default"])(tabState);
+  (0,_show__WEBPACK_IMPORTED_MODULE_4__["default"])(tabState);
 }
 
 function increment (num, inc, range) {
@@ -1803,11 +1732,11 @@ function jumpToPage (message) {
   }
 
   tabState.pageNum = message.pageNum - 1;
-  Object(_show__WEBPACK_IMPORTED_MODULE_4__["default"])(tabState);
+  (0,_show__WEBPACK_IMPORTED_MODULE_4__["default"])(tabState);
 }
 
 async function getData ({ forPopup }) {
-  const pageData = await Object(_common_interaction__WEBPACK_IMPORTED_MODULE_6__["getCurrentTab"])();
+  const pageData = await (0,_common_interaction__WEBPACK_IMPORTED_MODULE_6__.getCurrentTab)();
 
   let recentlyVisitedPages = Promise.resolve();
   let assignedTags = Promise.resolve();
@@ -1831,7 +1760,7 @@ async function getData ({ forPopup }) {
 async function addTagToPage ({ tag }) {
   const allExistingTags = await _tags__WEBPACK_IMPORTED_MODULE_2__["default"].create(tag);
 
-  const pageData = await Object(_common_interaction__WEBPACK_IMPORTED_MODULE_6__["getCurrentTab"])();
+  const pageData = await (0,_common_interaction__WEBPACK_IMPORTED_MODULE_6__.getCurrentTab)();
   await _tags__WEBPACK_IMPORTED_MODULE_2__["default"].addToPage(tag, pageData);
   const tagsForPage = await _tags__WEBPACK_IMPORTED_MODULE_2__["default"].getForPage(pageData);
   
@@ -1839,7 +1768,7 @@ async function addTagToPage ({ tag }) {
 }
 
 async function removeTagFromPage ({ tag }) {
-  const pageData = await Object(_common_interaction__WEBPACK_IMPORTED_MODULE_6__["getCurrentTab"])();
+  const pageData = await (0,_common_interaction__WEBPACK_IMPORTED_MODULE_6__.getCurrentTab)();
   await _tags__WEBPACK_IMPORTED_MODULE_2__["default"].removeFromPage(tag, pageData);
   return { assignedTags: await _tags__WEBPACK_IMPORTED_MODULE_2__["default"].getForPage(pageData) };
 }
@@ -1856,38 +1785,74 @@ async function removeTag ({ tag }) {
   return { allExistingTags: await _tags__WEBPACK_IMPORTED_MODULE_2__["default"].remove(tag) };
 }
 
-function startSearch ({ query }) {
-  return browser.tabs.create({ active: true, url: CONTENT_PAGE_URL })
-    .then((tab) => _state__WEBPACK_IMPORTED_MODULE_0__["default"].setTabState(tab.id, { tab, query }));
+async function startSearch ({ query }) {
+  const tab = await browser.tabs.create({ active: true, url: CONTENT_PAGE_URL });
+  _state__WEBPACK_IMPORTED_MODULE_0__["default"].setTabState(tab.id, { tab, query });
 }
 
-function continueBuildingPage ({ tabId }) {
+async function historyPagePrepared (message) {
+  const { tabId } = message;
+  const { query  } = _state__WEBPACK_IMPORTED_MODULE_0__["default"].getTabState(tabId);
+  (0,_common_interaction__WEBPACK_IMPORTED_MODULE_6__.sendMessageToTab)(tabId, "saveQuery", { query });
+}
+
+async function continueBuildingPage ({ tabId }) {
   const { query, tab } = _state__WEBPACK_IMPORTED_MODULE_0__["default"].getTabState(tabId);
-  const options = Object(_parse__WEBPACK_IMPORTED_MODULE_3__["default"])(query);
+  const options = (0,_parse__WEBPACK_IMPORTED_MODULE_3__["default"])(query);
 
-  _search__WEBPACK_IMPORTED_MODULE_1__["default"].run(options).then((results) => {
-    _state__WEBPACK_IMPORTED_MODULE_0__["default"].saveResults(tab.id, results, 0).then(() => {
-      _state__WEBPACK_IMPORTED_MODULE_0__["default"].initTabState(tab.id, results, options).then((tabState) => {
-        _messages__WEBPACK_IMPORTED_MODULE_5__["default"].setupClientPage(tabState).then(() => Object(_show__WEBPACK_IMPORTED_MODULE_4__["default"])(tabState));
-      });
-    });
-  });
+  const searchResults = await _search__WEBPACK_IMPORTED_MODULE_1__["default"].run(options);
+  await _state__WEBPACK_IMPORTED_MODULE_0__["default"].saveResults(tab.id, searchResults, 0);
+  const tabState = await _state__WEBPACK_IMPORTED_MODULE_0__["default"].initTabState(tab.id, searchResults, options);
+  await _messages__WEBPACK_IMPORTED_MODULE_5__["default"].setupClientPage(tabState);
+  (0,_show__WEBPACK_IMPORTED_MODULE_4__["default"])(tabState);
 }
 
-function saveSearchQuery ({ query }) {
-  return _state__WEBPACK_IMPORTED_MODULE_0__["default"].saveSearch(query).then(() => ({ saved: true }));
+function saveSearchQuery ({ query, queryName }) {
+  return _state__WEBPACK_IMPORTED_MODULE_0__["default"].saveSearch(query, queryName).then(() => ({ saved: true }));
 }
 
 async function removeSearchQuery ({ query }) {
-  return { savedSearches: await _state__WEBPACK_IMPORTED_MODULE_0__["default"].removeSearch(query), saved: false }; 
+  return { savedSearches: await _state__WEBPACK_IMPORTED_MODULE_0__["default"].removeSearch(query), saved: false };
+}
+
+async function getSavedSearches () {
+  return { savedSearches: await _state__WEBPACK_IMPORTED_MODULE_0__["default"].getSavedSearches() };
 }
 
 function openPage ({ url }){
-  browser.tabs.create({ active: true, url: _common__WEBPACK_IMPORTED_MODULE_7__["SPECIAL_PAGES"][url] || url });
+  browser.tabs.create({ active: true, url: _common__WEBPACK_IMPORTED_MODULE_7__.SPECIAL_PAGES[url] || url });
 }
 
 function extractDomain (url) {
   return url.split('/').slice(0, 3).join('/').split('#')[0].split('?')[0];
+}
+
+async function removeAllEntries ({ tabId }) {
+  const { totalPages } = _state__WEBPACK_IMPORTED_MODULE_0__["default"].getTabState(tabId);
+
+  for (let i = 0; i < totalPages; i++) {
+    const resultsPage = await _state__WEBPACK_IMPORTED_MODULE_0__["default"].getResultsPage(tabId, i);
+
+    for (let j = 0; j < resultsPage.length; j++) {
+      await browser.history.deleteUrl({ url: resultsPage[j].url });
+    } 
+  }
+
+  browser.tabs.remove([tabId]);
+}
+
+async function removeOneEntry ({ tabId, id, scrollY }) {
+  const tabState = _state__WEBPACK_IMPORTED_MODULE_0__["default"].getTabState(tabId);
+  const { results: searchResults, pageNum } = tabState;
+  const idx = searchResults.findIndex((record) => record.id == id);
+
+  await browser.history.deleteUrl({ url: searchResults[idx].url });
+  searchResults.splice(idx, 1);
+
+  await _state__WEBPACK_IMPORTED_MODULE_0__["default"].saveResults(tabId, searchResults, 0);
+  const newTabState = await _state__WEBPACK_IMPORTED_MODULE_0__["default"].initTabState(tabId, searchResults, tabState);
+
+  (0,_show__WEBPACK_IMPORTED_MODULE_4__["default"])(newTabState, scrollY);
 }
 
 
@@ -1897,11 +1862,13 @@ function extractDomain (url) {
 /*!**********************************!*\
   !*** ./src/background/search.js ***!
   \**********************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
 /* harmony import */ var _tags__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./tags */ "./src/background/tags.js");
 /* harmony import */ var _state__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./state */ "./src/background/state.js");
 /* harmony import */ var _parse__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./parse */ "./src/background/parse.js");
@@ -1915,21 +1882,21 @@ const browser = __webpack_require__(/*! webextension-polyfill */ "./node_modules
 
 const MAX_RESULTS = 2147483647;
 
-/* harmony default export */ __webpack_exports__["default"] = ({
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
   run,
   visitsForHistory: getVisitsForHistoryEntries,
 });
 
 function run (options, maxResults) {
   if (typeof options === 'string') {
-    return run( Object(_parse__WEBPACK_IMPORTED_MODULE_2__["default"])(options) , maxResults);
+    return run( (0,_parse__WEBPACK_IMPORTED_MODULE_2__["default"])(options) , maxResults);
   }
 
   if (options.tags.length) {
     return searchTags(options.tags);
   }
   
-  return searchHistory(options).then((results) => Object(_postProcess__WEBPACK_IMPORTED_MODULE_3__["default"])(results, options).slice(0, maxResults || MAX_RESULTS));
+  return searchHistory(options).then((results) => (0,_postProcess__WEBPACK_IMPORTED_MODULE_3__["default"])(results, options).slice(0, maxResults || MAX_RESULTS));
 }
 
 function searchHistory ({ base, timeFrames }) {
@@ -2046,12 +2013,13 @@ function isWithinTimeFrames (visitItem, timeFrames) {
 /*!********************************!*\
   !*** ./src/background/show.js ***!
   \********************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return showResults; });
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ showResults)
+/* harmony export */ });
 /* harmony import */ var _search__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./search */ "./src/background/search.js");
 /* harmony import */ var _messages__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./messages */ "./src/background/messages.js");
 /* harmony import */ var _state__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./state */ "./src/background/state.js");
@@ -2059,10 +2027,10 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-function showResults (opts) {
+function showResults (opts, scrollY) {
   _state__WEBPACK_IMPORTED_MODULE_2__["default"].getResultsPage(opts.tabId, opts.pageNum)
     .then((list) => _search__WEBPACK_IMPORTED_MODULE_0__["default"].visitsForHistory(list, opts)
-    .then((listWithVisits) => _messages__WEBPACK_IMPORTED_MODULE_1__["default"].buildPage(opts.tabId, listWithVisits, opts.pageNum + 1)))
+    .then((listWithVisits) => _messages__WEBPACK_IMPORTED_MODULE_1__["default"].buildPage(opts.tabId, listWithVisits, opts.pageNum + 1, opts.totalCount, scrollY)))
 }
 
 
@@ -2072,12 +2040,14 @@ function showResults (opts) {
 /*!*********************************!*\
   !*** ./src/background/state.js ***!
   \*********************************/
-/*! exports provided: SETTINGS, default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "SETTINGS", function() { return SETTINGS; });
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   SETTINGS: () => (/* binding */ SETTINGS),
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
 const browser = __webpack_require__(/*! webextension-polyfill */ "./node_modules/webextension-polyfill/dist/browser-polyfill.js");
 
 const RESULTS_SAVE_KEY = 'results';
@@ -2106,7 +2076,7 @@ const SETTINGS = {
   DEFAULT: DEFAULT_SETTINGS,
 };
 
-/* harmony default export */ __webpack_exports__["default"] = ({
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
   getTabState,
   setTabState,
   setPopupState,
@@ -2122,7 +2092,6 @@ const SETTINGS = {
   getSavedSearches,
   saveSearch,
   removeSearch,
-  isSearchSaved,
   visitedPagesLength
 });
 
@@ -2139,14 +2108,18 @@ function setPopupState (tabId, state) {
 }
 
 async function initTabState (tabId, results, options) {
+  const savedSearch = await getSearch(options.query);
+
   return setTabState(tabId, {
-    ...options,
     pageNum: 0,
+    ...options,
+    results,
     totalCount: results.length,
     totalPages: Math.ceil(results.length / SETTINGS.PAGE_SIZE),
     tabId,
-    color: COLOR_SCHEMES[ SETTINGS.COLOR ],
-    isSaved: await isSearchSaved(options.query),
+    color: COLOR_SCHEMES[SETTINGS.COLOR],
+    isSaved: savedSearch,
+    queryName: savedSearch.queryName || "",
   });
 }
 
@@ -2210,23 +2183,27 @@ function removeResultsPage (tabId, pageNum) {
 }
 
 function getSavedSearches () {
-  return browser.storage.local.get(SEARCHES_SAVE_KEY).then((result) => result[SEARCHES_SAVE_KEY] || []);
+  return browser.storage.local.get(SEARCHES_SAVE_KEY).then((result) => result[SEARCHES_SAVE_KEY] || {});
 }
 
 function setSavedSearches (searches) {
   return browser.storage.local.set({ [SEARCHES_SAVE_KEY]: searches });
 }
 
-async function isSearchSaved (searchString) {
+async function getSearch (searchString) {
   const allSearches = await getSavedSearches();
-  return allSearches.includes(searchString);
+  if (Object.keys(allSearches).includes(searchString)) {
+    return { query: searchString, queryName: allSearches[searchString] };
+  }
+  
+  return false;
 } 
 
-async function saveSearch (searchString) {
+async function saveSearch (searchString, name) {
   const allSearches = await getSavedSearches();
   
-  if (!allSearches.includes(searchString)) {
-    allSearches.unshift(searchString);
+  if (!Object.keys(allSearches).includes(searchString)) {
+    allSearches[searchString] = name;
     await setSavedSearches(allSearches);
   }
   
@@ -2235,7 +2212,7 @@ async function saveSearch (searchString) {
 
 async function removeSearch (searchString) {
   const allSearches = await getSavedSearches();
-  allSearches.splice( allSearches.indexOf(searchString), 1);
+  delete allSearches[searchString];
   await setSavedSearches(allSearches);
   return allSearches;
 }
@@ -2251,17 +2228,19 @@ function visitedPagesLength () {
 /*!********************************!*\
   !*** ./src/background/tags.js ***!
   \********************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
 const browser = __webpack_require__(/*! webextension-polyfill */ "./node_modules/webextension-polyfill/dist/browser-polyfill.js");
 
 const ALL_TAGS_KEY = 'ALL_TAGS';
 const TAG_KEY_PREFIX = 'TAG_KEY';
 
-/* harmony default export */ __webpack_exports__["default"] = ({
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
   create: createTag,
   remove: removeTag,
   getAll: getAllTags,
@@ -2346,19 +2325,21 @@ async function removeTag (tag) {
 /*!*********************************!*\
   !*** ./src/common/constants.js ***!
   \*********************************/
-/*! exports provided: SUGGESTIONS */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "SUGGESTIONS", function() { return SUGGESTIONS; });
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   SPACE_REGEXP: () => (/* binding */ SPACE_REGEXP),
+/* harmony export */   SUGGESTIONS: () => (/* binding */ SUGGESTIONS)
+/* harmony export */ });
 const SUGGESTIONS = {
   PREFIX: 'Histocher - ',
   DEFAULT: 'Search history with query',
-  SETTINGS: 'Controls',
-  HELP: 'How to Use'
+  SETTINGS: 'Main Page'
 };
 
+const SPACE_REGEXP = /\s+/g;
 
 /***/ }),
 
@@ -2366,17 +2347,18 @@ const SUGGESTIONS = {
 /*!***********************************!*\
   !*** ./src/common/interaction.js ***!
   \***********************************/
-/*! exports provided: getCurrentTab, sendMessage, sendMessageToTab, sendMessageToBackground, sendMessageFromBackground, onMessage */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getCurrentTab", function() { return getCurrentTab; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "sendMessage", function() { return sendMessage; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "sendMessageToTab", function() { return sendMessageToTab; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "sendMessageToBackground", function() { return sendMessageToBackground; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "sendMessageFromBackground", function() { return sendMessageFromBackground; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "onMessage", function() { return onMessage; });
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   getCurrentTab: () => (/* binding */ getCurrentTab),
+/* harmony export */   onMessage: () => (/* binding */ onMessage),
+/* harmony export */   sendMessage: () => (/* binding */ sendMessage),
+/* harmony export */   sendMessageFromBackground: () => (/* binding */ sendMessageFromBackground),
+/* harmony export */   sendMessageToBackground: () => (/* binding */ sendMessageToBackground),
+/* harmony export */   sendMessageToTab: () => (/* binding */ sendMessageToTab)
+/* harmony export */ });
 const browser = __webpack_require__(/*! webextension-polyfill */ "./node_modules/webextension-polyfill/dist/browser-polyfill.js");
 
 const PROMISES_RESOLVES = {};
@@ -2454,4 +2436,124 @@ function saveCallback (action, cb) {
 
 /***/ })
 
-/******/ });
+/******/ 	});
+/************************************************************************/
+/******/ 	// The module cache
+/******/ 	var __webpack_module_cache__ = {};
+/******/ 	
+/******/ 	// The require function
+/******/ 	function __webpack_require__(moduleId) {
+/******/ 		// Check if module is in cache
+/******/ 		var cachedModule = __webpack_module_cache__[moduleId];
+/******/ 		if (cachedModule !== undefined) {
+/******/ 			return cachedModule.exports;
+/******/ 		}
+/******/ 		// Create a new module (and put it into the cache)
+/******/ 		var module = __webpack_module_cache__[moduleId] = {
+/******/ 			// no module.id needed
+/******/ 			// no module.loaded needed
+/******/ 			exports: {}
+/******/ 		};
+/******/ 	
+/******/ 		// Execute the module function
+/******/ 		__webpack_modules__[moduleId].call(module.exports, module, module.exports, __webpack_require__);
+/******/ 	
+/******/ 		// Return the exports of the module
+/******/ 		return module.exports;
+/******/ 	}
+/******/ 	
+/************************************************************************/
+/******/ 	/* webpack/runtime/define property getters */
+/******/ 	(() => {
+/******/ 		// define getter functions for harmony exports
+/******/ 		__webpack_require__.d = (exports, definition) => {
+/******/ 			for(var key in definition) {
+/******/ 				if(__webpack_require__.o(definition, key) && !__webpack_require__.o(exports, key)) {
+/******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
+/******/ 				}
+/******/ 			}
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
+/******/ 	(() => {
+/******/ 		__webpack_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/make namespace object */
+/******/ 	(() => {
+/******/ 		// define __esModule on exports
+/******/ 		__webpack_require__.r = (exports) => {
+/******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 			}
+/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/************************************************************************/
+var __webpack_exports__ = {};
+// This entry needs to be wrapped in an IIFE because it needs to be in strict mode.
+(() => {
+"use strict";
+/*!**********************************!*\
+  !*** ./src/background-script.js ***!
+  \**********************************/
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _common_interaction__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./common/interaction */ "./src/common/interaction.js");
+/* harmony import */ var _common_constants__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./common/constants */ "./src/common/constants.js");
+/* harmony import */ var _background_reactions__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./background/reactions */ "./src/background/reactions.js");
+/* harmony import */ var _background_messages__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./background/messages */ "./src/background/messages.js");
+/* harmony import */ var _background_state__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./background/state */ "./src/background/state.js");
+/* harmony import */ var _background_context_menu__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./background/context-menu */ "./src/background/context-menu.js");
+const browser = __webpack_require__(/*! webextension-polyfill */ "./node_modules/webextension-polyfill/dist/browser-polyfill.js");
+
+
+
+
+
+
+
+
+const FAVICON_SAVE_KEY = 'favicon';
+
+window.__IS_BACKGROUND_SCRIPT__ = true;
+
+browser.omnibox.setDefaultSuggestion({ description: _common_constants__WEBPACK_IMPORTED_MODULE_1__.SUGGESTIONS.PREFIX + _common_constants__WEBPACK_IMPORTED_MODULE_1__.SUGGESTIONS.DEFAULT });
+browser.omnibox.onInputEntered.addListener(onInputEntered);
+browser.runtime.onMessage.addListener((message) => (0,_common_interaction__WEBPACK_IMPORTED_MODULE_0__.onMessage)(message, _background_reactions__WEBPACK_IMPORTED_MODULE_2__["default"]));
+browser.storage.onChanged.addListener(_background_state__WEBPACK_IMPORTED_MODULE_4__["default"].onSettingsChange);
+browser.tabs.onActivated.addListener(onTabActivated);
+browser.tabs.onRemoved.addListener(onTabRemoved);
+browser.tabs.onUpdated.addListener(onFaviconUpdated);
+browser.contextMenus.onClicked.addListener(_background_context_menu__WEBPACK_IMPORTED_MODULE_5__.onContextMenuClicked);
+
+(0,_background_context_menu__WEBPACK_IMPORTED_MODULE_5__.setupContextMenu)();
+
+_background_state__WEBPACK_IMPORTED_MODULE_4__["default"].loadSettings();
+
+function onFaviconUpdated (tabId, changedInfo, tab) {
+  const origin = tab.url.split('/').slice(0, 3).join('/')
+  browser.storage.local.set({ [origin + FAVICON_SAVE_KEY]: changedInfo.favIconUrl });
+}
+
+function onTabActivated ({ tabId }) {
+  if (_background_state__WEBPACK_IMPORTED_MODULE_4__["default"].getTabState(tabId)) {
+    _background_messages__WEBPACK_IMPORTED_MODULE_3__["default"].sendTagData({ tabId });
+  }
+}
+
+function onTabRemoved (tabId) {
+  if (_background_state__WEBPACK_IMPORTED_MODULE_4__["default"].getTabState(tabId)) {
+    _background_state__WEBPACK_IMPORTED_MODULE_4__["default"].removeTabState(tabId);
+  }
+}
+
+function onInputEntered (query) {
+  _background_reactions__WEBPACK_IMPORTED_MODULE_2__["default"].startSearch({ query });
+}
+
+})();
+
+/******/ })()
+;

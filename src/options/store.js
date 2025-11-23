@@ -11,7 +11,7 @@ const STATE = {
   PAGE_SIZE: 0,
   color: '',
   colorSchemes: [],
-  savedSearches: [],
+  savedSearches: {},
 };
 
 const store = {
@@ -26,6 +26,7 @@ const store = {
   saveData,
   startSearch,
   removeSearch,
+  getSavedSearches,
 };
 
 export default store;
@@ -55,7 +56,6 @@ function getState () {
     selectedColor: STATE.COLOR,
     visitedPagesLength: STATE.VISITED_PAGES_LENGTH,
     colorSchemes: Object.keys(SETTINGS.COLOR_SCHEMES).map((color) => ({ option: color })),
-    savedSearches: STATE.savedSearches.map((query) => ({ query })),
   }
 }
 
@@ -115,4 +115,9 @@ function startSearch (query) {
 
 function removeSearch (string) {
   return Message.removeSearch(string).then(saveData);
+}
+
+async function getSavedSearches () {
+  const { savedSearches } = await Message.getSavedSearches();
+  return savedSearches;
 }

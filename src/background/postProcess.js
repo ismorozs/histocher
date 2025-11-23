@@ -28,41 +28,45 @@ function sortResults (results, sortRules) {
   sortRules.forEach((rule) => {
 
     switch (rule) {
-      case '>u':
-      case '>url':
-        orderedResults = orderedResults.sort((a, b) => a.url > b.url);
+      case 'u>':
+      case 'url>':
+        orderedResults.sort((a, b) => compareObjectStrings(a, b, "url"));
         break;
-      case '<u':
-      case '<url':
-        orderedResults = orderedResults.sort((a, b) => a.url < b.url);
+      case 'u<':
+      case 'url<':
+        orderedResults.sort((a, b) => compareObjectStrings(b, a, "url"));
         break;
-      case '>t':
-      case '>title':
-        orderedResults = orderedResults.sort((a, b) => a.title > b.title);
+      case 't>':
+      case 'title>':
+        orderedResults.sort((a, b) => compareObjectStrings(a, b, "title"));
         break;
-      case '<t':
-      case '<title':
-        orderedResults = orderedResults.sort((a, b) => a.title < b.title);
+      case 't<':
+      case 'title<':
+        orderedResults.sort((a, b) => compareObjectStrings(b, a, "title"));
         break;
-      case '>d':
-      case '>date':
-        orderedResults = orderedResults.sort((a, b) => a.lastVisitTime > b.lastVisitTime);
+      case 'd>':
+      case 'date>':
+        orderedResults.sort((a, b) => a.lastVisitTime - b.lastVisitTime);
         break;
-      case '<d':
-      case '<date':
-        orderedResults = orderedResults.sort((a, b) => a.lastVisitTime < b.lastVisitTime);
+      case 'd<':
+      case 'date<':
+        orderedResults.sort((a, b) => b.lastVisitTime - a.lastVisitTime);
         break;
-      case '>v':
-      case '>visit':
-        orderedResults = orderedResults.sort((a, b) => a.visitCount > b.visitCount);
+      case 'v>':
+      case 'visit>':
+        orderedResults.sort((a, b) => a.visitCount - b.visitCount);
         break;
-      case '<v':
-      case '<visit':
-        orderedResults = orderedResults.sort((a, b) => a.visitCount < b.visitCount);
+      case 'v<':
+      case 'visit<':
+        orderedResults.sort((a, b) => b.visitCount - a.visitCount);
         break;
     }
 
   });
 
   return orderedResults;
+}
+
+function compareObjectStrings (a, b, key) {
+  return a[key] > b[key] ? 1 : a[key] < b[key] ? -1 : 0;
 }

@@ -7,29 +7,33 @@ const WRAPPER_PADDING = 55;
 const MAX_WRAPPER_WIDTH = 1366;
 const VISIT_COUNTS_WIDTH = 45;
 const LAST_VISIT_TIME_WIDTH = 130;
-const INFO_PANEL_HEIGHT = 67;
+const REMOVE_BUTTON_WIDTH = 14;
+const INFO_PANEL_HEIGHT = 74;
 
 const FAVICON_SAVE_KEY = 'favicon';
 const DEFAULT_FAVICON_PATH = '/favicon.ico';
 
 const WRAPPER_EL = document.querySelector('.wrapper');
 const SUMMARY_EL = document.querySelector('.summary');
+const TOTAL_COUNT = document.querySelector('.totalCount');
 const CURRENT_PAGE_EL = document.querySelector('.pageNum');
 const TABLE_CONTAINER_EL = document.querySelector('.table-container');
 const SPINNER_EL = document.querySelector('.spinner');
 const FULL_QUERY_EL = document.querySelector('.fullQuery');
 const SAVE_BUTTON = document.querySelector('.saveButton');
+const QUERY_NAME = document.querySelector('.queryName');
 
 const ROW_OPTS = {
   title: { name: 'Title', value: createTitle },
   url: { name: 'Url', value: createLink },
   lastVisitTime: { name: 'Visits', value: createDate },
   visitTimes: { name: ' ', value: createVisitCount },
+  removeButton: { name: " ", value: createRemoveButton }
 };
 
 const ICONS_URLS = {};
 
-const UI_SELECTORS = [ 'query', 'fullQuery', 'pageNum', 'totalPages', 'totalCount' ];
+const UI_SELECTORS = [ 'query', 'fullQuery', 'pageNum', 'totalPages', 'totalCount', 'queryName'];
 
 export default {
   setupElements,
@@ -79,10 +83,17 @@ function buildPage (data) {
   TABLE_CONTAINER_EL.appendChild(table);
   State.currentPage(data.pageNum);
   writeToNode(CURRENT_PAGE_EL, data.pageNum);
+  writeToNode(TOTAL_COUNT, data.totalCount);
 
   WRAPPER_EL.classList.add('white');
   SUMMARY_EL.classList.remove('hidden');
   SPINNER_EL.classList.add('hidden');
+
+  window.TABLE_CONTAINER_EL = TABLE_CONTAINER_EL;
+
+  if (data.scrollY) {
+    TABLE_CONTAINER_EL.firstChild.scroll(0, data.scrollY);
+  }
 }
 
 function createTable (list) {
@@ -199,10 +210,18 @@ function createVisitCount (values) {
 
 function padZero (value) {
   if (value < 10) {
-    return '0' + value; 
+    return '0' + value;
   }
 
   return value;
+}
+
+function createRemoveButton ({ id }) {
+  const span = document.createElement("span");
+  span.classList.add("remove");
+  span.title = "Remove";
+  span.dataset.id = id;
+  return span;
 }
 
 function emptyNode (node) {
@@ -224,8 +243,8 @@ function generateStyles () {
   }
 
   const tableHeight = windowHeight - INFO_PANEL_HEIGHT;
-  const titleWidth = (wrapperWidth - VISIT_COUNTS_WIDTH - LAST_VISIT_TIME_WIDTH) / 5 * 3;
-  const urlWidth = (wrapperWidth - VISIT_COUNTS_WIDTH - LAST_VISIT_TIME_WIDTH) / 5 * 2;
+  const titleWidth = (wrapperWidth - VISIT_COUNTS_WIDTH - LAST_VISIT_TIME_WIDTH - REMOVE_BUTTON_WIDTH) / 5 * 3;
+  const urlWidth = (wrapperWidth - VISIT_COUNTS_WIDTH - LAST_VISIT_TIME_WIDTH - REMOVE_BUTTON_WIDTH) / 5 * 2;
 
   const stylesStr = `
     .wrapper { margin-left: ${wrapperPadding}px; margin-right: ${wrapperPadding}px; }
@@ -234,6 +253,7 @@ function generateStyles () {
     .url { width: ${urlWidth}px; }
     .visitTimes { width: ${VISIT_COUNTS_WIDTH}px; }
     .lastVisitTime { width: ${LAST_VISIT_TIME_WIDTH}px; }
+    .remove { width: ${REMOVE_BUTTON_WIDTH}px; }
   `;
 
   appendStyles(stylesStr);
@@ -292,8 +312,9 @@ function setSaveButton (bool) {
   SAVE_BUTTON.classList.remove(classToRemove);
 
   const cb = () => {
+    const queryName = QUERY_NAME.value;
     const query = State.tabState().query;
-    Message[operation + 'SearchQuery'](query).then(({ saved }) => setSaveButton(saved));
+    Message[operation + 'SearchQuery'](query, queryName).then(({ saved }) => setSaveButton(saved));
   }
   writeToNode(SAVE_BUTTON, text);
   SAVE_BUTTON.onclick = cb;

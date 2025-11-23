@@ -1,13 +1,21 @@
 export default {
   '': {
-    paddingLeft: 30,
-    fontSize: 14,
+    paddingTop: 10,
+    fontSize: 16,
     overflow: 'auto',
   },
 
+  input: {
+    fontSize: 16,
+  },
+
+  select: {
+    fontSize: 16,
+  },
+
   'h3': {
-    fontSize: 20,
-    marginTop: 33,
+    fontSize: 28,
+    marginTop: 30,
   },
 
   '.hidden': {
@@ -17,9 +25,12 @@ export default {
   '.floatLeft': {
     float: 'left',
   },
+
+  '.panel': {
+    marginTop: 10,
+  },
   
   table: {
-    width: 324,
     borderCollapse: 'collapse',
     marginBottom: 20,
   },
@@ -30,6 +41,13 @@ export default {
   
   '.option-name': {
     textAlign: 'right',
+    marginBottom: 20,
+    display: 'inline-block',
+    marginRight: 10,
+  },
+
+  '.option-name + input': {
+    width: 80,
   },
 
   '.settingsPanel': {
@@ -39,14 +57,12 @@ export default {
   '.settingsPanel button': {
     display: 'inline-block',
     textAlign: 'center',
-    fontSize: 15,
-    padding: '5px 10px',
-    width: 110,
+    fontSize: 18,
+    padding: '6px 40px',
   },
   
-  defaultButton: {
-    marginTop: 10,
-    width: 80,
+  defaultsButton: {
+    marginLeft: 5,
   },
   
   br: {
@@ -70,7 +86,7 @@ export default {
 
   searchesPanel: {
     clear: 'both',
-    paddingTop: 1,
+    paddingTop: 20,
     fontSize: 18,
   },
 
@@ -81,5 +97,11 @@ export default {
 
   button: {
     cursor: 'pointer',
+    fontSize: 16,
+    padding: "3px 20px"
+  },
+
+  form: {
+    marginBottom: 15,
   }
 };

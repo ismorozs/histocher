@@ -3,12 +3,15 @@ export function has (str, substr) {
 }
 
 export const STRING_FILTERS = {
-  '+url': (obj, str) => has(obj.url.toLowerCase(), str),
-  '+^url': (obj, str) => obj.url.toLowerCase().startsWith(str),
-  '+title': (obj, str) => has(obj.title.toLowerCase(), str),
-  '+urlortitle': (obj, str) => has(obj.title.toLowerCase(), str) || has(obj.url.toLowerCase(), str),
-  '-url': (obj, str) => !has(obj.url.toLowerCase(), str),
-  '-title': (obj, str) => !has(obj.title.toLowerCase(), str),
+  "+url": (obj, str) => obj.url.toLowerCase().includes(str),
+  "+title": (obj, str) =>
+    obj.title !== null && obj.title.toLowerCase().includes(str),
+  "+urlortitle": (obj, str) =>
+    (obj.title !== null && obj.title.toLowerCase().includes(str)) ||
+    has(obj.url.toLowerCase(), str),
+  "-url": (obj, str) => !obj.url.toLowerCase().includes(str),
+  "-title": (obj, str) =>
+    obj.title !== null && !obj.title.toLowerCase().includes(str),
 };
 
 export const SPECIAL_PAGES = {

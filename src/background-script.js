@@ -5,6 +5,7 @@ import { SUGGESTIONS } from './common/constants';
 import reactions from './background/reactions';
 import Message from './background/messages';
 import State from './background/state';
+import { onContextMenuClicked, setupContextMenu } from './background/context-menu';
 
 const FAVICON_SAVE_KEY = 'favicon';
 
@@ -12,12 +13,14 @@ window.__IS_BACKGROUND_SCRIPT__ = true;
 
 browser.omnibox.setDefaultSuggestion({ description: SUGGESTIONS.PREFIX + SUGGESTIONS.DEFAULT });
 browser.omnibox.onInputEntered.addListener(onInputEntered);
-browser.omnibox.onInputChanged.addListener(onInputChanged);
 browser.runtime.onMessage.addListener((message) => onMessage(message, reactions));
 browser.storage.onChanged.addListener(State.onSettingsChange);
 browser.tabs.onActivated.addListener(onTabActivated);
 browser.tabs.onRemoved.addListener(onTabRemoved);
 browser.tabs.onUpdated.addListener(onFaviconUpdated);
+browser.contextMenus.onClicked.addListener(onContextMenuClicked);
+
+setupContextMenu();
 
 State.loadSettings();
 
@@ -38,24 +41,6 @@ function onTabRemoved (tabId) {
   }
 }
 
-function onInputChanged (query, addSuggestions) {
-  addSuggestions([
-    { description: SUGGESTIONS.PREFIX + SUGGESTIONS.SETTINGS, content: SUGGESTIONS.SETTINGS },
-    { description: SUGGESTIONS.PREFIX + SUGGESTIONS.HELP, content: SUGGESTIONS.HELP },
-  ]);
-}
-
 function onInputEntered (query) {
-  switch (query) {
-    case SUGGESTIONS.SETTINGS:
-      reactions.openPage({ url: 'settings' });
-      break;
-
-    case SUGGESTIONS.HELP:
-      reactions.openPage({ url: 'help' });
-      break;
-
-    default:
-      reactions.startSearch({ query });
-  }
+  reactions.startSearch({ query });
 }

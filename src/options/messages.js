@@ -5,7 +5,8 @@ export default {
   getData,
   startSearch,
   removeSearch,
-}
+  getSavedSearches,
+};
 
 function removeTag (tag) {
   return sendMessageToBackground('removeTag', { tag });
@@ -21,4 +22,8 @@ function startSearch (query) {
 
 function removeSearch (query) {
   return sendMessageToBackground('removeSearchQuery', { query });
+}
+
+function getSavedSearches() {
+  return sendMessageToBackground("getSavedSearches");
 }

@@ -1,6 +1,7 @@
 export const SUGGESTIONS = {
   PREFIX: 'Histocher - ',
   DEFAULT: 'Search history with query',
-  SETTINGS: 'Controls',
-  HELP: 'How to Use'
+  SETTINGS: 'Main Page'
 };
+
+export const SPACE_REGEXP = /\s+/g;

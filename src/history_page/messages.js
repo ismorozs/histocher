@@ -5,10 +5,10 @@ export default {
   removeSearchQuery
 }
 
-function saveSearchQuery (query) {
-  return sendMessageToBackground('saveSearchQuery', { query });
+function saveSearchQuery (query, queryName) {
+  return sendMessageToBackground('saveSearchQuery', { query, queryName });
 }
 
-function removeSearchQuery (query) {
-  return sendMessageToBackground('removeSearchQuery', { query });
+function removeSearchQuery (query, queryName) {
+  return sendMessageToBackground('removeSearchQuery', { query, queryName });
 }

@@ -30,8 +30,8 @@ async function sendTagData ({ tabId }) {
   sendMessage('getData', data);
 }
 
-function buildPage ( tabId, list, pageNum) {
-  sendMessageToTab(tabId, 'buildPage', { list, pageNum });
+function buildPage ( tabId, list, pageNum, totalCount, scrollY) {
+  sendMessageToTab(tabId, 'buildPage', { list, pageNum, totalCount, scrollY });
 }
 
 function setupClientPage (tabState) {

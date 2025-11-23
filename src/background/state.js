@@ -42,7 +42,6 @@ export default {
   getSavedSearches,
   saveSearch,
   removeSearch,
-  isSearchSaved,
   visitedPagesLength
 }
 
@@ -59,14 +58,18 @@ function setPopupState (tabId, state) {
 }
 
 async function initTabState (tabId, results, options) {
+  const savedSearch = await getSearch(options.query);
+
   return setTabState(tabId, {
-    ...options,
     pageNum: 0,
+    ...options,
+    results,
     totalCount: results.length,
     totalPages: Math.ceil(results.length / SETTINGS.PAGE_SIZE),
     tabId,
-    color: COLOR_SCHEMES[ SETTINGS.COLOR ],
-    isSaved: await isSearchSaved(options.query),
+    color: COLOR_SCHEMES[SETTINGS.COLOR],
+    isSaved: savedSearch,
+    queryName: savedSearch.queryName || "",
   });
 }
 
@@ -130,23 +133,27 @@ function removeResultsPage (tabId, pageNum) {
 }
 
 function getSavedSearches () {
-  return browser.storage.local.get(SEARCHES_SAVE_KEY).then((result) => result[SEARCHES_SAVE_KEY] || []);
+  return browser.storage.local.get(SEARCHES_SAVE_KEY).then((result) => result[SEARCHES_SAVE_KEY] || {});
 }
 
 function setSavedSearches (searches) {
   return browser.storage.local.set({ [SEARCHES_SAVE_KEY]: searches });
 }
 
-async function isSearchSaved (searchString) {
+async function getSearch (searchString) {
   const allSearches = await getSavedSearches();
-  return allSearches.includes(searchString);
+  if (Object.keys(allSearches).includes(searchString)) {
+    return { query: searchString, queryName: allSearches[searchString] };
+  }
+  
+  return false;
 } 
 
-async function saveSearch (searchString) {
+async function saveSearch (searchString, name) {
   const allSearches = await getSavedSearches();
   
-  if (!allSearches.includes(searchString)) {
-    allSearches.unshift(searchString);
+  if (!Object.keys(allSearches).includes(searchString)) {
+    allSearches[searchString] = name;
     await setSavedSearches(allSearches);
   }
   
@@ -155,7 +162,7 @@ async function saveSearch (searchString) {
 
 async function removeSearch (searchString) {
   const allSearches = await getSavedSearches();
-  allSearches.splice( allSearches.indexOf(searchString), 1);
+  delete allSearches[searchString];
   await setSavedSearches(allSearches);
   return allSearches;
 }
