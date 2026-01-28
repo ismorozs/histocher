@@ -71,8 +71,8 @@ li {
 
 table {
   margin: 15px;
-  margin-top: 20px;
-  margin-bottom: 20px;
+  margin-top: 5px;
+  margin-bottom: 5px;
 }
 
 td, th {
@@ -87,4 +87,11 @@ th {
 
 .alignCenter {
   text-align: center;
+}
+
+.note {
+  display: block;
+  font-weight: 700;
+  margin-left: 15px;
+  line-height: 20px;
 }

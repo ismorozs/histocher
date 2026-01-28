@@ -88,19 +88,25 @@
       <p class="emphasizeRect green">
         General date argument form:
         <br>
-        <code class="blue bold">[+-=]dd/mm/yyyy/hh:mm</code>
+        <code class="blue bold">[&gt;&lt;=]dd/mm/yyyy/hh:mm</code>
+        <br>
+        or
+        <br>
+        <code class="blue bold">[&gt;&lt;=]ddMMMyyyy</code>
+        and to describe a time range from current time
+        <code class="blue bold">=ddWWWW</code>
       </p>
       <p>
-        where one of <span class="blue">-</span>, <span class="blue">+</span>, <span class="blue">=</span> signs must be included at the start of the date argument depending on the desired result:
+        where one of <span class="blue">&gt;</span>, <span class="blue">&lt;</span>, <span class="blue">=</span> signs must be included at the start of the date argument depending on the desired result:
       </p>
   
       <table class="emphasizeRect green">
         <tr><th class="alignCenter">Sign</th><th>Explanation</th></tr>
         <tr>
-          <td class="alignCenter"><code>+</code></td><td>after and including date</td>
+          <td class="alignCenter"><code>&gt;</code></td><td>after and including date</td>
         </tr>
         <tr>
-          <td class="alignCenter"><code>-</code></td><td>before and including date</td>
+          <td class="alignCenter"><code>&lt;</code></td><td>before and including date</td>
         </tr>
         <tr>
           <td class="alignCenter"><code>=</code></td><td>exact date</td>
@@ -119,9 +125,32 @@
         <tr><td class="alignCenter"><code>hh:</code></td><td>two digits followed by a colon</td><td>hours</td></tr>
         <tr><td class="alignCenter"><code>:mm</code></td><td>a colon followed by two digits</td><td>minutes</td></tr>
       </table>
+      <span class="note">
+        Note: The positions of slashes and colons are important for the extension to map string segments to the correct time units.
+        <br>
+        Omitted date segments will be assumed to be of the current time (the current year, the current month, etc.).
+      </span>
   
+      <p>For the second variant with specifying a month by words</p>
+
+      <table class="emphasizeRect green">
+        <tr><th>Segment</th><th>Description</th><th>Explanation</th></tr>
+        <tr><td class="alignCenter"><code>dd</code></td><td>one or two digits</td><td>a number of the month</td></tr>
+        <tr><td class="alignCenter"><code>MMM</code></td><td>three or more characters</td><td>the name of the month</td></tr>
+        <tr><td class="alignCenter"><code>yyyy</code></td><td>four digits</td><td>a year</td></tr>
+      </table>
+      <span class="note">Note: No need for punctuation marks, but must be typed without spaces, the year can be omitted.</span>
+
+      <p>For specifying a time range</p>
+
+      <table class="emphasizeRect green">
+        <tr><th>Segment</th><th>Description</th><th>Explanation</th></tr>
+        <tr><td class="alignCenter"><code>dd</code></td><td>one or more digits</td><td>a number of time units</td></tr>
+        <tr><td class="alignCenter"><code>WWWW</code></td><td>time unit name</td><td>can be years, months, weeks, days</td></tr>
+      </table>
+      <span class="note">Note: Unit name can be shortened to just the first character.</span>
+
       <p>
-        Omitted date segments will be assumed to be of the current time (the current year, the current month, etc.). <br>
         Multiple date options can be added and combined to specify multiple time spans.
       </p>
   
@@ -129,11 +158,18 @@
           <tr><th>Example query</th><th>Explanation</th></tr>
           <tr><td>h =/2018/</td><td>Find pages that were visited in 2018</td></tr>
           <tr><td>h =/4/2018/</td><td>Find pages that were visited in April 2018</td></tr>
-          <tr><td>h +3/</td><td>Find pages that were visited from 3th of the current month up to now</td></tr>
-          <tr><td>h +3/ -10/</td><td>Find pages that were visited from 3th and before 10th of the current month</td></tr>
-          <tr><td>h +/6/</td><td>Find pages that were visited from June of the current year up to now</td></tr>
+          <tr><td>h &gt;3/</td><td>Find pages that were visited from 3th of the current month up to now</td></tr>
+          <tr><td>h &gt;3/ &lt;10/</td><td>Find pages that were visited from 3th and before 10th of the current month</td></tr>
+          <tr><td>h &gt;/6/</td><td>Find pages that were visited from June of the current year up to now</td></tr>
           <tr><td>h =/5/ =/9/</td><td>Find pages that were visited in May or September of the current year</td></tr>
-          <tr><td>h +6: -12:</td><td>Find pages that were visited today from 6 am to 12 pm</td></tr>
+          <tr><td>h &gt;6: &lt;12:</td><td>Find pages that were visited today from 6 am to 12 pm</td></tr>
+          <tr><td>h >10dec2024</td><td>Find pages that were visited from December 10 2024</td></tr>
+          <tr><td>h >6Mar</td><td>Find pages that were visited from March 6 of the current year</td></tr>
+          <tr><td>h =7nov2023</td><td>Find pages that were visited on November 7 2023</td></tr>
+          <tr><td>h >1oct2025 &lt;5jan2026</td><td>Find pages that were visited from October 1 2026 up to January 5 2026 including</td></tr>
+          <tr><td>h =3weeks</td><td>Find pages that were visited in the past 3 weeks</td></tr>
+          <tr><td>h =2day</td><td>Find pages that were visited in the past 2 days</td></tr>
+          <tr><td>h =1y</td><td>Find pages that were visted in this year</td></tr>
         </table>
       <hr>
     </section>

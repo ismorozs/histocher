@@ -4,4 +4,8 @@ export const SUGGESTIONS = {
   SETTINGS: 'Main Page'
 };
 
+export const EXACT_TIME_SIGN = "=";
+export const START_TIME_SIGN = ">";
+export const END_TIME_SIGN = "<";
+
 export const SPACE_REGEXP = /\s+/g;

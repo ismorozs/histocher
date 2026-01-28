@@ -9,6 +9,7 @@ import reactions from './reactions';
 import backgroundReactions from '../background/reactions';
 import { emptyNode, hasClass } from '../common/markup';
 import Store from './store';
+import { START_TIME_SIGN, END_TIME_SIGN } from "../common/constants";
 
 browser.runtime.onMessage.addListener((message) => onMessage(message, reactions));
 
@@ -113,11 +114,11 @@ function appendToQuery (input) {
   }
 
   if (hasClass(input, "dateFrom")) {
-    return ` +${transformDate(value)}`;
+    return ` ${START_TIME_SIGN}${transformDate(value)}`;
   }
 
   if (hasClass(input, "dateTo")) {
-    return ` -${transformDate(value)}`;
+    return ` ${END_TIME_SIGN}${transformDate(value)}`;
   }
 
   if (hasClass(input, "sort")) {

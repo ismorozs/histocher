@@ -1371,7 +1371,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   SPACE_REGEXP: () => (/* binding */ SPACE_REGEXP),
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
-/* harmony import */ var _common__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./common */ "./src/background/common.js");
+/* harmony import */ var _common_constants__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../common/constants */ "./src/common/constants.js");
+/* harmony import */ var _common__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./common */ "./src/background/common.js");
+
 
 
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (parseRawOptions);
@@ -1380,6 +1382,9 @@ const EXTENSION_PREFIX = 'h';
 const SPACE_REGEXP = /\s+/g;
 const DEFAULT_START = new Date(0);
 const DEFAULT_END = new Date(9999, 11, 31);
+
+const DIGITS_DATE_REGEXP = /^[><=][\/\:]?\d+/;
+const DIGITS_WITH_LETTERS_DATE_REGEXP = /^[><=](\d+)([a-z]+)(\d{4})?$/;
 
 const DATE_REGEXPS = [
   { type: 'FullYear', regexp: /\/(\d{4})\// },
@@ -1399,6 +1404,9 @@ const TIME_FRAMES = {
   Minutes: { start: () => 0, end: () => 59 },
 };
 
+const DAYS_IN_MONTH = 30;
+
+const MONTHS_NAMES = ["jan", "feb", "mar", "arp", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
 const LAST_DAYS_OF_MONTHS = [31, [28, 29], 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 
 const SORT_TYPES = ['date', 'visit', 'url', 'title']
@@ -1428,23 +1436,14 @@ function parseRawOptions (rawString) {
 function parseOptions (rawOptions, options, curOption) {
   for (let i = 0; i < rawOptions.length; i++) {
     const word = rawOptions[i];
-    
-    if (isExactDate(word)) {
-      options.timeFrames.push({ start: createDate(word, 'start'), end: createDate(word, 'end') });
+
+    if (isDate(word)) {
+      const [startDate, endDate] = createDateRange(word);
+      options.timeFrames.push({ start: startDate, end: endDate });
       continue;
     }
 
-    if (isStartDate(word)) {
-      options.timeFrames.push({ start: createDate(word, 'start'), end: DEFAULT_END });
-      continue;
-    }
-
-    if (isEndDate(word)) {
-      options.timeFrames.push({ start: DEFAULT_START, end: createDate(word, 'end') });
-      continue;
-    }
-
-    if ((0,_common__WEBPACK_IMPORTED_MODULE_0__.has)(REAL_SORT_TYPES, word)) {
+    if ((0,_common__WEBPACK_IMPORTED_MODULE_1__.has)(REAL_SORT_TYPES, word)) {
       options.sort.push(word);
       continue;
     }
@@ -1454,7 +1453,7 @@ function parseOptions (rawOptions, options, curOption) {
       continue;
     }
 
-    if (_common__WEBPACK_IMPORTED_MODULE_0__.STRING_FILTERS[word]) {
+    if (_common__WEBPACK_IMPORTED_MODULE_1__.STRING_FILTERS[word]) {
       if (!options[word]) {
         options[word] = [];
       }
@@ -1498,6 +1497,96 @@ function flattenTimes (options) {
   }
 
   options.timeFrames = flattenedTimes;
+}
+
+function createDateRange (str) {
+  const isStartTime = str[0] === _common_constants__WEBPACK_IMPORTED_MODULE_0__.START_TIME_SIGN;
+  const isExactTime = str[0] === _common_constants__WEBPACK_IMPORTED_MODULE_0__.EXACT_TIME_SIGN;
+
+  if (isWordingDate(str)) {
+    const [, date, month, year] = DIGITS_WITH_LETTERS_DATE_REGEXP.exec(str);
+    const monthNumber = MONTHS_NAMES.findIndex((monthName) =>
+      month.toLowerCase().startsWith(monthName),
+    );
+
+    if (monthNumber === -1) {
+      return [ createDateFromDistance(date, month), DEFAULT_END ];
+    }
+
+    if (isExactTime) {
+      return [ createDateFromWords(date, monthNumber, year), createDateFromWords(date, monthNumber, year, true) ];
+    } else if (isStartTime) {
+      return [ createDateFromWords(date, monthNumber, year), DEFAULT_END ];
+    } else {
+      return [ DEFAULT_START, createDateFromWords(date, monthNumber, year, true) ];
+    }
+
+  } else {
+    if (isExactTime) {
+      return [ createDate(str, "start"), createDate(str, "end") ];
+    } else if (isStartTime) {
+      return [ createDate(str, "start"), DEFAULT_END ];
+    } else {
+      return [ DEFAULT_START, createDate(str, "end") ];
+    }
+  }
+}
+
+function createDateFromDistance (timeDistance, timeType) {
+  const newDate = new Date();
+  let daysDistance = 0;
+  let monthsDistance = 0;
+  let yearsDistance = 0;
+
+  switch (timeType[0]) {
+    case "y":
+      yearsDistance = newDate.getFullYear() - timeDistance;
+      break;
+
+    case "m":
+      [yearsDistance, monthsDistance] = normalizeDateDistance(newDate.getMonth(), timeDistance, LAST_DAYS_OF_MONTHS.length);
+      break;
+
+    case "w":
+      timeDistance = timeDistance * 7;
+
+    case "d":
+      [monthsDistance, daysDistance] = normalizeDateDistance(newDate.getDate(), timeDistance, DAYS_IN_MONTH);
+      [yearsDistance, monthsDistance] = normalizeDateDistance(newDate.getMonth(), monthsDistance, LAST_DAYS_OF_MONTHS.length);
+      break;
+  }
+
+  newDate.setDate(newDate.getDate() - daysDistance);
+  newDate.setFullYear(newDate.getFullYear() - yearsDistance);
+  newDate.setMonth(newDate.getMonth() - monthsDistance);
+  newDate.setUTCHours(0, 0, 0, 0);
+  return newDate;
+}
+
+function normalizeDateDistance (currentTime, rawSubstractingTime, maxTime) {
+  const wholeSubstractingParentTime = Math.floor(rawSubstractingTime / maxTime);
+  const substractingTime = rawSubstractingTime % maxTime;
+
+  return [currentTime > substractingTime]
+    ? [wholeSubstractingParentTime, substractingTime]
+    : 0;
+}
+
+function createDateFromWords (day, month, year, isEndOfDay) {
+  const date = new Date();
+  date.setDate(day);
+  date.setMonth(month);
+  if (year) {
+    date.setFullYear(year);
+  }
+
+  if (isEndOfDay) {
+    date.setUTCHours(23, 59, 59, 9999);
+  } else {
+    date.setUTCHours(0, 0, 0, 0);
+  }
+
+  return date;
 }
 
 function createDate (dateArg, borderType) {
@@ -1545,16 +1634,16 @@ function isLeapYear (year) {
   return 0;
 }
 
-function isExactDate (str) {
-  return /^\=[\/\:]?\d+/.test(str);
+function isDate (str) {
+  return isWordingDate(str) || isDigitalDate(str);
 }
 
-function isStartDate (str) {
-  return /^\+[\/\:]?\d+/.test(str);
+function isWordingDate (str) {
+  return DIGITS_WITH_LETTERS_DATE_REGEXP.test(str);
 }
 
-function isEndDate (str) {
-  return /^\-[\/\:]?\d+/.test(str);
+function isDigitalDate (str) {
+  return DIGITS_DATE_REGEXP.test(str);
 }
 
 function isTag (str) {
@@ -2330,7 +2419,10 @@ async function removeTag (tag) {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   END_TIME_SIGN: () => (/* binding */ END_TIME_SIGN),
+/* harmony export */   EXACT_TIME_SIGN: () => (/* binding */ EXACT_TIME_SIGN),
 /* harmony export */   SPACE_REGEXP: () => (/* binding */ SPACE_REGEXP),
+/* harmony export */   START_TIME_SIGN: () => (/* binding */ START_TIME_SIGN),
 /* harmony export */   SUGGESTIONS: () => (/* binding */ SUGGESTIONS)
 /* harmony export */ });
 const SUGGESTIONS = {
@@ -2338,6 +2430,10 @@ const SUGGESTIONS = {
   DEFAULT: 'Search history with query',
   SETTINGS: 'Main Page'
 };
+
+const EXACT_TIME_SIGN = "=";
+const START_TIME_SIGN = ">";
+const END_TIME_SIGN = "<";
 
 const SPACE_REGEXP = /\s+/g;
 
